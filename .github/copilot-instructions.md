@@ -370,6 +370,17 @@ The following capabilities are explicitly NOT supported:
 4. **Edge Cases**: Test boundary conditions (e.g., favoriting already-favorited article)
 5. **Cascade Deletes**: Verify related records clean up properly
 
+
+### Frontend Unit Testing
+1. **Co-location**: All frontend unit tests must be co-located with the source files they test
+   - Place test files in the same directory as the source file
+   - Example: `components/Button.jsx` → `components/Button.test.js`
+2. **Naming Convention**: Use `*.test.js` naming format for all test files
+3. **Test Coverage**: All frontend code must have unit tests
+   - Components, hooks, utilities, and services require test coverage
+   - Tests should cover both happy paths and error scenarios
+4. **Test Runner**: Frontend tests use Vitest (run with `npx vitest`)
+
 ## Related Documentation
 
 - Feature specifications: `.github/specs/<feature>/spec.md`

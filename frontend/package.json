@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "axios": "^0.21.1",
@@ -33,7 +35,9 @@
     "eslint-plugin-react": "^7.24.0",
     "eslint-plugin-react-hooks": "^4.2.0",
     "faker": "^5.5.3",
+    "jsdom": "^27.4.0",
     "miragejs": "^0.1.41",
-    "vite": "^2.3.8"
+    "vite": "^2.3.8",
+    "vitest": "^4.0.18"
   }
 }

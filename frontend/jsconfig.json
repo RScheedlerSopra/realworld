@@ -4,9 +4,13 @@
     "moduleResolution": "node",
     "target": "es2020",
     "checkJs": true,
-    "jsx": "react",
-    "types": ["cypress", "@testing-library/cypress"]
+    "jsx": "react-jsx",
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
+    "baseUrl": ".",
+    "paths": {
+      "*": ["./src/*"]
+    }
   },
   "include": ["src/**/*.js", "src/**/*.jsx", "cypress/**/*.js"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist", "build", "**/*.test.js", "**/*.test.jsx", "**/*.spec.js", "**/*.spec.jsx"]
 }

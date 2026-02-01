@@ -60,9 +60,9 @@ public class ListHandlerTests : HandlerTestBase
         await Context.SaveChangesAsync();
 
         var query = new List.Query(
-            Tag: null!,
-            Author: null!,
-            FavoritedUsername: null!,
+            Tag: null,
+            Author: null,
+            FavoritedUsername: null,
             Limit: null,
             Offset: null,
             IsFeed: false
@@ -130,8 +130,8 @@ public class ListHandlerTests : HandlerTestBase
 
         var query = new List.Query(
             Tag: "tag1",
-            Author: null!,
-            FavoritedUsername: null!,
+            Author: null,
+            FavoritedUsername: null,
             Limit: null,
             Offset: null,
             IsFeed: false
@@ -188,9 +188,9 @@ public class ListHandlerTests : HandlerTestBase
         await Context.SaveChangesAsync();
 
         var query = new List.Query(
-            Tag: null!,
+            Tag: null,
             Author: "author1",
-            FavoritedUsername: null!,
+            FavoritedUsername: null,
             Limit: null,
             Offset: null,
             IsFeed: false
@@ -255,8 +255,8 @@ public class ListHandlerTests : HandlerTestBase
         await Context.SaveChangesAsync();
 
         var query = new List.Query(
-            Tag: null!,
-            Author: null!,
+            Tag: null,
+            Author: null,
             FavoritedUsername: "user",
             Limit: null,
             Offset: null,
@@ -301,9 +301,9 @@ public class ListHandlerTests : HandlerTestBase
         await Context.SaveChangesAsync();
 
         var query = new List.Query(
-            Tag: null!,
-            Author: null!,
-            FavoritedUsername: null!,
+            Tag: null,
+            Author: null,
+            FavoritedUsername: null,
             Limit: 3,
             Offset: 2,
             IsFeed: false
@@ -344,8 +344,8 @@ public class ListHandlerTests : HandlerTestBase
 
         var query = new List.Query(
             Tag: "nonexistent",
-            Author: null!,
-            FavoritedUsername: null!,
+            Author: null,
+            FavoritedUsername: null,
             Limit: null,
             Offset: null,
             IsFeed: false

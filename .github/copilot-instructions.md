@@ -370,9 +370,34 @@ The following capabilities are explicitly NOT supported:
 4. **Edge Cases**: Test boundary conditions (e.g., favoriting already-favorited article)
 5. **Cascade Deletes**: Verify related records clean up properly
 
+### Backend Unit Testing
+
+1. **Mandatory**: All backend validators and handlers must have unit tests in `backend/tests/Conduit.UnitTests/`
+2. **Framework**: Use xUnit, FluentAssertions, Moq, and Entity Framework InMemory database
+3. **Organization**: Mirror feature structure from `backend/src/Conduit/Features/` (e.g., `Features/Articles/CreateHandlerTests.cs`)
+4. **Naming**: `<Command/Query>ValidatorTests.cs` for validators, `<Command/Query>HandlerTests.cs` for handlers, test methods use `Should_ExpectedBehavior_When_Condition`
+5. **Validators**: Test all validation rules with valid/invalid inputs using `FluentValidation.TestHelper` and `TestValidate()` method
+6. **Handlers**: Test happy paths, error conditions, business logic, database interactions, and cascade behavior
+7. **Test Structure**: Use Arrange-Act-Assert pattern, one test class per validator/handler, create base classes for shared setup
+8. **Mocking**: Mock external dependencies like `ICurrentUserAccessor` using Moq, use InMemory database for data access
+9. **Coverage**: Aim for 80%+ coverage on business logic, skip only trivial code (DTOs, getters/setters)
+10. **Run**: Execute with `dotnet test backend/tests/Conduit.UnitTests/` or through IDE test explorers
+
+
+### Frontend Unit Testing
+1. **Co-location**: All frontend unit tests must be co-located with the source files they test
+   - Place test files in the same directory as the source file
+   - Example: `components/Button.jsx` → `components/Button.test.js`
+2. **Naming Convention**: Use `*.test.js` naming format for all test files
+3. **Test Coverage**: All frontend code must have unit tests
+   - Components, hooks, utilities, and services require test coverage
+   - Tests should cover both happy paths and error scenarios
+4. **Test Runner**: Frontend tests use Vitest (run with `npx vitest`)
+
 ## Related Documentation
 
 - Feature specifications: `.github/specs/<feature>/spec.md`
 - Backend source: `backend/src/Conduit/`
 - Frontend source: `frontend/src/`
+- Unit tests: `backend/tests/Conduit.UnitTests/`
 - Integration tests: `backend/tests/Conduit.IntegrationTests/`

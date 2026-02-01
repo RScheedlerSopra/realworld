@@ -343,6 +343,10 @@ The following capabilities are explicitly NOT supported:
 - Webhooks or integrations
 
 ## Development Guidelines
+### General
+1. Never run the frontend and backend. Instead, run the tests to validate the working of the application.
+2. Always make sure the backend builds after you have finished building a feature
+3. Always make sure the frontend builds after you have finished building a feature
 
 ### When Adding Features
 1. **Authentication**: Check if feature requires authenticated user vs public access

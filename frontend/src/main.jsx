@@ -34,8 +34,10 @@ if (window.Cypress && process.env.NODE_ENV === 'test') {
     },
   })
   cyServer.logging = false
-} else if(process.env.NODE_ENV === 'development') {
+} else if(import.meta.env.VITE_START_MOCK_SERVER === 'true') {
   makeServer({ environment: 'development' })
+} else if(process.env.NODE_ENV === 'development') {
+  axios.defaults.baseURL = 'http://localhost:5000'
 }
 
 ReactDOM.render(

@@ -14,13 +14,6 @@ public class ErrorHandlingMiddleware(
     ILogger<ErrorHandlingMiddleware> logger
 )
 {
-    private static readonly Action<ILogger, string, Exception> LOGGER_MESSAGE =
-        LoggerMessage.Define<string>(
-            LogLevel.Error,
-            eventId: new EventId(id: 0, name: "ERROR"),
-            formatString: "{Message}"
-        );
-
     public async Task Invoke(HttpContext context)
     {
         try
@@ -46,10 +39,16 @@ public class ErrorHandlingMiddleware(
             case RestException re:
                 context.Response.StatusCode = (int)re.Code;
                 result = JsonSerializer.Serialize(new { errors = re.Errors });
+                // Log RestException with full stack trace
+                logger.LogError(exception, "REST Exception occurred: {Message}", re.Errors);
                 break;
             default:
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                LOGGER_MESSAGE(logger, "Unhandled Exception", exception);
+                // Log unhandled exception with full stack trace
+                logger.LogError(exception, "Unhandled Exception: {ExceptionType} - {Message}\nStack Trace: {StackTrace}", 
+                    exception.GetType().FullName, 
+                    exception.Message,
+                    exception.StackTrace);
                 result = JsonSerializer.Serialize(
                     new { errors = localizer[Constants.InternalServerError].Value }
                 );

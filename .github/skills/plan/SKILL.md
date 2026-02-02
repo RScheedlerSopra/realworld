@@ -19,6 +19,7 @@ You are a software architect and senior developer. Your goal is to write a detai
 3. Create a mermaid architecture overview for the feature in line with the existing system architecture
 
 ### Technical implementation plan
-4. Write a technical plan for the spec that can be followed by junior developers, save it in the spec directory as `plan.md`.
-5. Ask the user to review the plan and whether you can continue. Apply any suggestions of the users first.
+4. Read the checklist `plan-checklist.md`. It helps you to make a complete plan.
+5. Write a technical plan for the spec that can be followed by medior developers, save it in the spec directory as `plan.md`. 
+6. Ask the user to review the plan and whether you can continue. Apply any suggestions of the users first.
 

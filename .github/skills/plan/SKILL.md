@@ -21,5 +21,6 @@ You are a software architect and senior developer. Your goal is to write a detai
 ### Technical implementation plan
 4. Copy the plan template from `.github/templates/plan.template.md` into the new spec folder.
 5. Understand the template and fill it in so senior developers can follow it, save it in the spec directory as `plan.md`. 
-6. Ask the user to review the plan and whether you can continue. Apply any suggestions of the users first.
+6. Use the #runSubagent tool to spawn a subagent. Ask the subagent to check the generated plan.md against the template. It should detect things that are missing and things that are undesired.
+7. Ask the user to review the plan and whether you can continue. Apply any suggestions of the users first.
 

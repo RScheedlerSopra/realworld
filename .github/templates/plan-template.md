@@ -1,7 +1,7 @@
 <!--
 Technical implementation plans live at: .github/specs/<kebab-case-name>/plan.md
-This plan should be written by a senior developer/architect for medior developers to implement.
-Be specific about what needs to change, but keep it concise and high-level.
+This plan is written for senior developers to implement a feature.
+Focus on architecture, edge cases, pitfalls, and dependencies - not implementation details.
 -->
 
 # Technical Implementation Plan: <feature-name>
@@ -9,7 +9,7 @@ Be specific about what needs to change, but keep it concise and high-level.
 ## 1) Architecture Overview
 
 ### System Context
-<Brief description of how this feature fits into the overall system>
+<Brief description of how this feature fits into the overall system and interacts with existing features>
 
 ### Architecture Diagram
 ```mermaid
@@ -24,185 +24,142 @@ graph TD
 ```
 
 ### Key Design Decisions
-- <Decision 1 with rationale>
+- <Decision 1 with rationale - why this approach vs alternatives>
 - <Decision 2 with rationale>
 
 ### Data Flow
-1. <User action> → 2. <Frontend processing> → 3. <API call> → 4. <Backend processing> → 5. <Database operation> → 6. <Response>
+<Describe the end-to-end data flow, including any transformations, validations, or side effects>
 
 ## 2) Backend Implementation
 
-### Domain Layer Changes
-- **Entities**: `backend/src/Conduit/Domain/<EntityName>.cs`
-  - Properties: <list key properties>
-  - Relationships: <describe relationships>
-  
-- **Database Context**: `backend/src/Conduit/Infrastructure/ConduitContext.cs`
-  - Add `DbSet<EntityName>`
-  - Configure relationships, cascade deletes, indexes in `OnModelCreating`
+### Domain Layer
+**Entities**: `backend/src/Conduit/Domain/<EntityName>.cs`
+- New/modified entities and their key properties
+- Relationships and navigation properties
+- **Database Context**: Update `ConduitContext.cs` with DbSet and relationship configuration (cascade behavior, indexes)
+- **Migration**: Generate migration after domain changes
 
-### Command/Query Handlers
-- **Create**: `backend/src/Conduit/Features/<FeatureName>/<Action>.cs`
-  - Command/Query properties: <list>
-  - Handler logic: <describe main logic>
-  - Database operations: <describe>
-  - Response: <DTO type>
+### Features
+**Location**: `backend/src/Conduit/Features/<FeatureName>/`
 
-### Validators
-- **Create**: `backend/src/Conduit/Features/<FeatureName>/<Action>Validator.cs`
-  - Validation rules: <list key rules>
+Implement the following operations:
+- <Operation 1>: `[HttpMethod] api/<route>` - <brief description>
+- <Operation 2>: `[HttpMethod] api/<route>` - <brief description>
 
-### DTOs
-- **Create**: Response models in feature folder
-  - <List DTO files and their purpose>
+Each operation needs:
+- Command/Query with MediatR handler
+- FluentValidation validator
+- Response DTO(s)
+- Controller endpoint (authorization: `[Authorize]` or public)
 
-### Controller Endpoints
-- **Create/Modify**: `backend/src/Conduit/Features/<FeatureName>/<Controller>.cs`
-  - `[Http<Method>] api/<route>`
-  - Authorization: `[Authorize]` or none
-  - Request/Response types
-  - Status codes: <list>
+**Complex Business Logic** (if applicable):
+<If there's complex logic, provide pseudocode or detailed explanation>
 
-### Infrastructure
-- **Services** (if needed): `backend/src/Conduit/Infrastructure/<ServiceName>.cs`
-  - Register in `ServicesExtensions.cs`
-- **Configuration** (if needed): Update `Program.cs`
+### Edge Cases & Pitfalls
+- <Edge case 1 and how to handle>
+- <Edge case 2 and how to handle>
+- <Potential pitfall and how to avoid>
 
-### Database Migration
-```bash
-cd backend/src/Conduit
-dotnet ef migrations add <MigrationName>
-```
+### Testing Requirements
+**Unit Tests**: `backend/tests/Conduit.UnitTests/Features/<FeatureName>/`
+- Validator tests for all validation rules
+- Handler tests for business logic and database interactions
+- Important edge cases: <list critical scenarios>
 
-### Tests
-- **Unit Tests**: `backend/tests/Conduit.UnitTests/Features/<FeatureName>/`
-  - Validator tests: test all validation rules
-  - Handler tests: test happy path, error cases, business logic
-  
-- **Integration Tests**: `backend/tests/Conduit.IntegrationTests/Features/<FeatureName>/`
-  - Test full request/response cycle, auth, database changes
+**Integration Tests**: `backend/tests/Conduit.IntegrationTests/Features/<FeatureName>/`
+- Full request/response cycle
+- Authentication/authorization
+- Database state changes
+- Critical edge cases: <list if any>
 
 ## 3) Frontend Implementation
 
 ### Components
-- **New**: `frontend/src/components/<ComponentName>.jsx` + `.test.jsx`
-  - Props: <list>
-  - Behavior: <describe>
-  - Export in `index.js`
-  
-- **Modify**: `frontend/src/components/<ExistingComponent>.jsx`
-  - Changes: <describe>
+**New Components**: `frontend/src/components/`
+- `<ComponentName>.jsx` + `.test.jsx` - <purpose>
+- Export in `index.js`
+
+**Modified Components**:
+- `<ExistingComponent>.jsx` - <what changes and why>
 
 ### Pages & Routing
-- **New Page**: `frontend/src/pages/<PageName>.jsx` + `.test.jsx`
-  - Route: `/<route>` (Public / `<AuthRoute>` / `<GuestRoute>`)
-  - Components used: <list>
-  - Export in `index.jsx`
-  
-- **Routing**: Update `frontend/src/App.jsx` with new route
-- **Navigation**: Update `frontend/src/components/Navbar.jsx` if needed
+**New Pages**: `frontend/src/pages/`
+- `<PageName>.jsx` + `.test.jsx`
+- Route: `/<route>` (route type: Public / `<AuthRoute>` / `<GuestRoute>`)
+- Update `App.jsx` routing
+- Update `Navbar.jsx` navigation (if needed)
 
 ### State Management
-- **Query Hooks**: `frontend/src/hooks/use<Feature>Query.js`
-  - Endpoint: `GET /<endpoint>`
-  - Query key: `['<feature>', ...]`
-  - Export in `index.js`
-  
-- **Mutation Hooks**: `frontend/src/hooks/use<Action>Mutation.js`
-  - Endpoint: `<METHOD> /<endpoint>`
-  - Cache invalidation: <query keys to invalidate>
-  - Optimistic updates: <if applicable>
-  - Export in `index.js`
+**Query Hooks**: `frontend/src/hooks/`
+- `use<Feature>Query.js` - <endpoint and purpose>
+- Export in `index.js`
 
-### Data Models (if needed)
-- **Create**: `frontend/src/models/<ModelName>.js`
-  - Data transformations between API and frontend
-  - Export in `index.js`
+**Mutation Hooks**: `frontend/src/hooks/`
+- `use<Action>Mutation.js` - <endpoint and purpose>
+- Cache invalidation: <which query keys to invalidate>
+- Optimistic updates: <if applicable, describe the approach>
+- Export in `index.js`
 
 ### API Integration
-- **Agent**: Update `frontend/src/services/agent.js` with new methods
-- **Mock Server**: Update `frontend/src/server.js`
-  - Add models, factories, seeds
-  - Add route handlers for new endpoints
+**Agent**: Update `frontend/src/services/agent.js`
+- Add methods for new endpoints: <list methods>
 
-### Forms & UI
-- **Forms**: Implement with validation, error handling (422 responses)
-- **Styles**: Update `frontend/src/App.css`
-- **States**: Implement loading, empty, and error states
-- **Accessibility**: Add ARIA labels, keyboard navigation
+**MirageJS Mock Server**: Update `frontend/src/server.js`
+- Add/update models: <model definitions>
+- Add factories: <factory configurations>
+- Add seeds: <seed data for development>
+- Add route handlers: <endpoint handlers>
 
-### Dependencies (if needed)
-- Update `frontend/package.json` and run `npm install`
+### UI/UX Considerations
+- Form validation and error handling (422 responses)
+- Loading states, empty states, error states
+- Update `App.css` if new styles needed
+- Accessibility considerations (ARIA labels, keyboard navigation)
+
+### Edge Cases & Pitfalls
+- <Edge case 1 and how to handle in UI>
+- <Edge case 2 and how to handle in UI>
+
+### Testing Requirements
+**Unit Tests**: Co-located `.test.jsx` files
+- Component rendering and behavior
+- User interactions
+- Important edge cases: <list critical scenarios>
 
 ## 4) Validation & Testing
 
-### Backend Validation
+**Backend**:
+```bash
+cd backend
+dotnet build Conduit.sln                                          # Must succeed
+dotnet test tests/Conduit.UnitTests/                              # All pass
+dotnet test tests/Conduit.IntegrationTests/                       # All pass
+```
 
-**REQUIRED: The backend MUST build and all tests MUST pass before proceeding.**
+**Frontend**:
+```bash
+cd frontend
+npm run build                                                     # Must succeed
+npm test                                                          # All pass
+```
 
-1. **Build the solution**:
-   ```bash
-   cd backend
-   dotnet build Conduit.sln
-   ```
-   Fix all build errors until clean build succeeds (0 errors).
-
-2. **Run all unit tests**:
-   ```bash
-   cd backend
-   dotnet test tests/Conduit.UnitTests/Conduit.UnitTests.csproj
-   ```
-   Fix all test failures until all tests pass. Ensure new code has adequate test coverage (aim for 80%+).
-
-3. **Run all integration tests**:
-   ```bash
-   cd backend
-   dotnet test tests/Conduit.IntegrationTests/Conduit.IntegrationTests.csproj
-   ```
-   Fix all test failures until all tests pass.
-
-### Frontend Validation
-
-**REQUIRED: The frontend MUST build and all tests MUST pass before proceeding.**
-
-1. **Build the frontend**:
-   ```bash
-   cd frontend
-   npm run build
-   ```
-   Fix all build errors until clean build succeeds.
-
-3. **Run all unit tests**:
-   ```bash
-   cd frontend
-   npm test
-   ```
-   Fix all test failures until all tests pass. Ensure new components have unit tests.
-
-### Final Verification
-
-**Before considering implementation complete, ensure:**
-
-1. ✅ Backend builds with zero errors
-2. ✅ All backend unit tests pass
-3. ✅ All backend integration tests pass
-4. ✅ Frontend builds with zero errors
-5. ✅ All frontend unit tests pass
-6. ✅ Manual testing confirms feature works as specified
-7. ✅ No regressions in existing functionality
+**Checklist**:
+- ✅ Backend builds (0 errors)
+- ✅ All backend unit tests pass
+- ✅ All backend integration tests pass
+- ✅ Frontend builds (0 errors)
+- ✅ All frontend unit tests pass
+- ✅ Manual testing confirms feature works as specified
+- ✅ No regressions in existing functionality
 
 ## 5) Implementation Notes
 
-### Development Order
-1. <Backend domain layer>
-2. <Backend feature implementation>
-3. <Backend tests>
-4. <Frontend components>
-5. <Frontend integration>
-6. <Frontend tests>
+### Dependencies
+- <List any dependencies on other features or external systems>
+- <List any feature dependencies that depend on this>
 
-### Dependencies / Prerequisites
-- <List any dependencies>
+### Critical Implementation Order (if applicable)
+<Only include if there's a critical order to implementation steps, otherwise omit>
 
 ### References
 - Feature spec: `.github/specs/<kebab-case-name>/spec.md`

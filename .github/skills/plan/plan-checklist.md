@@ -1,38 +1,43 @@
 # Frontend Implementation Checklist
 
 ## Component Layer
-- [ ] Create new components in `frontend/src/components/`
-- [ ] Export new components in `frontend/src/components/index.js`
+- [ ] Create new standalone components in `frontend/src/app/shared/components/` or `frontend/src/app/features/<feature>/components/`
+- [ ] Implement component with `@Component` decorator and explicit imports
 - [ ] Modify existing components as needed
 
 ## Pages & Routing
-- [ ] Create new pages in `frontend/src/pages/`
-- [ ] Add routes to `frontend/src/App.jsx` with appropriate wrapper (`Route` / `AuthRoute` / `GuestRoute`)
-- [ ] Export new pages in `frontend/src/pages/index.jsx`
-- [ ] Update the `Navbar` component if adding navigation items
+- [ ] Create new page components in `frontend/src/app/features/<feature>/pages/`
+- [ ] Add routes to `frontend/src/app/app.routes.ts`
+- [ ] Apply route guards if needed (`authGuard`, `guestGuard`)
+- [ ] Update navigation components if adding menu items
 
 ## State Management
-- [ ] Create query hooks for data fetching in `frontend/src/hooks/`
-- [ ] Create mutation hooks for data modifications with optimistic updates and query invalidations
-- [ ] Add or modify auth state in `frontend/src/hooks/useAuth.js` if needed
-- [ ] Export new hooks in `frontend/src/hooks/index.js`
+- [ ] Create services for data fetching and state management in `frontend/src/app/core/services/` or feature-specific services
+- [ ] Use Angular signals for reactive state
+- [ ] Use RxJS observables for async operations
+- [ ] Provide services at appropriate level (root or component)
+- [ ] Update authentication service if auth state changes needed
 
 ## Data Models
-- [ ] Create or modify data transformation models in `frontend/src/models/`
-- [ ] Export new models in `frontend/src/models/index.js`
+- [ ] Create or modify TypeScript interfaces in `frontend/src/app/core/models/` or feature-specific models
+- [ ] Define request and response types
 
 ## API Integration
-- [ ] Update the MirageJS mock server (`frontend/src/server.js`) with newly consumed endpoints
-- [ ] Add mock route handlers, models, factories, and seed data as needed
+- [ ] Create or update API services using Angular `HttpClient`
+- [ ] Define typed interfaces for API requests/responses
+- [ ] Use HTTP interceptors for authentication headers if needed
+- [ ] Return observables for async operations
 
 ## Forms & Validation
-- [ ] Implement forms with Formik and client-side validation
+- [ ] Implement forms with Angular Reactive Forms
+- [ ] Add client-side validators
 - [ ] Handle server validation errors (422 responses)
 
 ## UI/UX
-- [ ] Add styles to `frontend/src/App.css`
-- [ ] Implement loading, empty, and error states
+- [ ] Add styles to `frontend/src/styles.css` or component-specific style files
+- [ ] Implement loading, empty, and error states using signals
 - [ ] Add accessibility attributes (aria-labels, keyboard navigation)
+- [ ] Use `@rx-angular/template` directives for optimized rendering if needed
 
 ## Configuration
 - [ ] Update `package.json` and run `npm install` if adding dependencies

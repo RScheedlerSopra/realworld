@@ -8,7 +8,7 @@ Conduit is a social blogging platform (similar to Medium) that enables users to 
 
 Conduit is a full-stack web application with:
 - **Backend**: .NET/C# API server with relational database
-- **Frontend**: React SPA with client-side routing
+- **Frontend**: Angular SPA with standalone components and client-side routing
 - **Authentication**: JWT-based stateless authentication
 - **Data Storage**: Relational database with Entity Framework
 
@@ -387,12 +387,13 @@ The following capabilities are explicitly NOT supported:
 ### Frontend Unit Testing
 1. **Co-location**: All frontend unit tests must be co-located with the source files they test
    - Place test files in the same directory as the source file
-   - Example: `components/Button.jsx` → `components/Button.test.js`
-2. **Naming Convention**: Use `*.test.js` naming format for all test files
+   - Example: `components/button.component.ts` → `components/button.component.test.ts`
+2. **Naming Convention**: Use `*.test.ts` naming format for all test files
 3. **Test Coverage**: All frontend code must have unit tests
-   - Components, hooks, utilities, and services require test coverage
+   - Components, services, guards, utilities, and pipes require test coverage
    - Tests should cover both happy paths and error scenarios
-4. **Test Runner**: Frontend tests use Vitest (run with `npx vitest`)
+4. **Test Runner**: Frontend tests use Vitest (run with `npm run test`)
+5. **E2E Testing**: Use Playwright for end-to-end tests (run with `npm run test:e2e`)
 
 ## Related Documentation
 

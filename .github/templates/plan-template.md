@@ -75,55 +75,55 @@ Each operation needs:
 ## 3) Frontend Implementation
 
 ### Components
-**New Components**: `frontend/src/components/`
-- `<ComponentName>.jsx` + `.test.jsx` - <purpose>
-- Export in `index.js`
+**New Components**: `frontend/src/app/shared/components/` or `frontend/src/app/features/<feature>/components/`
+- `<component-name>.component.ts` + `.component.test.ts` - <purpose>
+- Standalone components with explicit imports
 
 **Modified Components**:
-- `<ExistingComponent>.jsx` - <what changes and why>
+- `<existing-component>.component.ts` - <what changes and why>
 
 ### Pages & Routing
-**New Pages**: `frontend/src/pages/`
-- `<PageName>.jsx` + `.test.jsx`
-- Route: `/<route>` (route type: Public / `<AuthRoute>` / `<GuestRoute>`)
-- Update `App.jsx` routing
-- Update `Navbar.jsx` navigation (if needed)
+**New Routes**: `frontend/src/app/features/<feature>/pages/`
+- `<page-name>.component.ts` + `.component.test.ts`
+- Route: `/<route>` (route type: public / authenticated / guest-only)
+- Update `app.routes.ts` with new route configuration
+- Add route guards if needed (e.g., `authGuard`, `guestGuard`)
+- Update navigation components if adding new menu items
 
 ### State Management
-**Query Hooks**: `frontend/src/hooks/`
-- `use<Feature>Query.js` - <endpoint and purpose>
-- Export in `index.js`
+**Services**: `frontend/src/app/core/services/` or `frontend/src/app/features/<feature>/services/`
+- `<feature>.service.ts` + `.service.test.ts` - API integration and state management
+- Use Angular signals for reactive state
+- Use RxJS observables for async operations
+- Provide services at appropriate level (root or component)
 
-**Mutation Hooks**: `frontend/src/hooks/`
-- `use<Action>Mutation.js` - <endpoint and purpose>
-- Cache invalidation: <which query keys to invalidate>
-- Optimistic updates: <if applicable, describe the approach>
-- Export in `index.js`
+**Stores** (if needed): `frontend/src/app/core/stores/`
+- `<feature>.store.ts` - State management for complex features
+- Use signals and computed for derived state
 
 ### API Integration
-**Agent**: Update `frontend/src/services/agent.js`
-- Add methods for new endpoints: <list methods>
-
-**MirageJS Mock Server**: Update `frontend/src/server.js`
-- Add/update models: <model definitions>
-- Add factories: <factory configurations>
-- Add seeds: <seed data for development>
-- Add route handlers: <endpoint handlers>
+**API Service**: Update or create services in `frontend/src/app/core/services/`
+- Use Angular `HttpClient` for API calls
+- Create typed interfaces for request/response models
+- Handle authentication headers via interceptors
+- Return observables for async operations
 
 ### UI/UX Considerations
-- Form validation and error handling (422 responses)
-- Loading states, empty states, error states
-- Update `App.css` if new styles needed
+- Form validation using Angular reactive forms and error handling (422 responses)
+- Loading states, empty states, error states using signals
+- Update `styles.css` or component-specific styles if needed
 - Accessibility considerations (ARIA labels, keyboard navigation)
+- Use `@rx-angular/template` for optimized rendering if needed
 
 ### Edge Cases & Pitfalls
 - <Edge case 1 and how to handle in UI>
 - <Edge case 2 and how to handle in UI>
 
 ### Testing Requirements
-**Unit Tests**: Co-located `.test.jsx` files
+**Unit Tests**: Co-located `.test.ts` files
 - Component rendering and behavior
-- User interactions
+- Service method logic
+- User interactions and event handlers
 - Important edge cases: <list critical scenarios>
 
 ## 4) Validation & Testing
@@ -140,7 +140,8 @@ dotnet test tests/Conduit.IntegrationTests/                       # All pass
 ```bash
 cd frontend
 npm run build                                                     # Must succeed
-npm test                                                          # All pass
+npm run test                                                      # All unit tests pass
+npm run test:e2e                                                  # All E2E tests pass (optional)
 ```
 
 **Checklist**:

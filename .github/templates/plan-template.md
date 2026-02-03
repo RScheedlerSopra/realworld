@@ -1,167 +1,217 @@
 <!--
 Technical implementation plans live at: .github/specs/<kebab-case-name>/plan.md
-This plan is written for senior developers to implement a feature.
-Focus on architecture, edge cases, pitfalls, and dependencies - not implementation details.
+
+This plan provides HIGH-LEVEL strategic guidance for a capable AI agent to implement a feature.
+Focus on architecture, approach, patterns, edge cases, and gotchas - NOT detailed implementations.
+
+⚠️ CRITICAL: DO NOT INCLUDE:
+- Code fragments, class definitions, or method implementations
+- Detailed property lists or method signatures
+- Complete validation rules or business logic code
+- UI component templates or detailed styling
+
+The implementing agent is capable - provide strategic direction, not code.
+
+The plan is organized into milestones (5-10 files each) that can be independently verified.
+Implementation agents should mark milestones as complete as they progress through the work.
 -->
 
 # Technical Implementation Plan: <feature-name>
 
-## 1) Architecture Overview
+## 1. Architecture & Strategy
 
 ### System Context
-<Brief description of how this feature fits into the overall system and interacts with existing features>
+<2-3 sentences: How this feature fits into the overall system and interacts with existing features>
 
 ### Architecture Diagram
 ```mermaid
 graph TD
-    A[User] --> B[Frontend Component]
-    B --> C[API Endpoint]
-    C --> D[Handler]
-    D --> E[Database]
+    A[User/Client] --> B[Frontend Layer]
+    B --> C[API Layer]
+    C --> D[Business Logic]
+    D --> E[Data Layer]
     
-    %% Add more nodes and connections as needed
-    %% Use appropriate Mermaid diagram types: graph, sequenceDiagram, classDiagram, etc.
+    %% Show major components and data flow
+    %% Use appropriate diagram type: graph, sequenceDiagram, classDiagram, etc.
 ```
 
 ### Key Design Decisions
-- <Decision 1 with rationale - why this approach vs alternatives>
-- <Decision 2 with rationale>
+- **<Decision 1>**: <Rationale and alternatives considered>
+- **<Decision 2>**: <Rationale and alternatives considered>
 
-### Data Flow
-<Describe the end-to-end data flow, including any transformations, validations, or side effects>
+### Data Flow Summary
+<High-level description of how data flows through the system, including key transformations and side effects>
 
-## 2) Backend Implementation
-
-### Domain Layer
-**Entities**: `backend/src/Conduit/Domain/<EntityName>.cs`
-- New/modified entities and their key properties
-- Relationships and navigation properties
-- **Database Context**: Update `ConduitContext.cs` with DbSet and relationship configuration (cascade behavior, indexes)
-- **Migration**: Generate migration after domain changes
-
-### Features
-**Location**: `backend/src/Conduit/Features/<FeatureName>/`
-
-Implement the following operations:
-- <Operation 1>: `[HttpMethod] api/<route>` - <brief description>
-- <Operation 2>: `[HttpMethod] api/<route>` - <brief description>
-
-Each operation needs:
-- Command/Query with MediatR handler
-- FluentValidation validator
-- Response DTO(s)
-- Controller endpoint (authorization: `[Authorize]` or public)
-
-**Complex Business Logic** (if applicable):
-<If there's complex logic, provide pseudocode or detailed explanation>
-
-### Edge Cases & Pitfalls
-- <Edge case 1 and how to handle>
-- <Edge case 2 and how to handle>
-- <Potential pitfall and how to avoid>
-
-### Testing Requirements
-**Unit Tests**: `backend/tests/Conduit.UnitTests/Features/<FeatureName>/`
-- Validator tests for all validation rules
-- Handler tests for business logic and database interactions
-- Important edge cases: <list critical scenarios>
-
-**Integration Tests**: `backend/tests/Conduit.IntegrationTests/Features/<FeatureName>/`
-- Full request/response cycle
-- Authentication/authorization
-- Database state changes
-- Critical edge cases: <list if any>
-
-## 3) Frontend Implementation
-
-### Components
-**New Components**: `frontend/src/app/shared/components/` or `frontend/src/app/features/<feature>/components/`
-- `<component-name>.component.ts` + `.component.test.ts` - <purpose>
-- Standalone components with explicit imports
-
-**Modified Components**:
-- `<existing-component>.component.ts` - <what changes and why>
-
-### Pages & Routing
-**New Routes**: `frontend/src/app/features/<feature>/pages/`
-- `<page-name>.component.ts` + `.component.test.ts`
-- Route: `/<route>` (route type: public / authenticated / guest-only)
-- Update `app.routes.ts` with new route configuration
-- Add route guards if needed (e.g., `authGuard`, `guestGuard`)
-- Update navigation components if adding new menu items
-
-### State Management
-**Services**: `frontend/src/app/core/services/` or `frontend/src/app/features/<feature>/services/`
-- `<feature>.service.ts` + `.service.test.ts` - API integration and state management
-- Use Angular signals for reactive state
-- Use RxJS observables for async operations
-- Provide services at appropriate level (root or component)
-
-**Stores** (if needed): `frontend/src/app/core/stores/`
-- `<feature>.store.ts` - State management for complex features
-- Use signals and computed for derived state
-
-### API Integration
-**API Service**: Update or create services in `frontend/src/app/core/services/`
-- Use Angular `HttpClient` for API calls
-- Create typed interfaces for request/response models
-- Handle authentication headers via interceptors
-- Return observables for async operations
-
-### UI/UX Considerations
-- Form validation using Angular reactive forms and error handling (422 responses)
-- Loading states, empty states, error states using signals
-- Update `styles.css` or component-specific styles if needed
-- Accessibility considerations (ARIA labels, keyboard navigation)
-- Use `@rx-angular/template` for optimized rendering if needed
-
-### Edge Cases & Pitfalls
-- <Edge case 1 and how to handle in UI>
-- <Edge case 2 and how to handle in UI>
-
-### Testing Requirements
-**Unit Tests**: Co-located `.test.ts` files
-- Component rendering and behavior
-- Service method logic
-- User interactions and event handlers
-- Important edge cases: <list critical scenarios>
-
-## 4) Validation & Testing
+### Critical Patterns & Conventions
 
 **Backend**:
-```bash
-cd backend
-dotnet build Conduit.sln                                          # Must succeed
-dotnet test tests/Conduit.UnitTests/                              # All pass
-dotnet test tests/Conduit.IntegrationTests/                       # All pass
-```
+<Patterns the implementing agent should follow, e.g.:>
+- MediatR CQRS pattern for all operations (Command/Query + Handler)
+- FluentValidation for input validation
+- JWT authentication via `[Authorize]` attribute
+- Unit tests in `backend/tests/Conduit.UnitTests/` mirroring feature structure
+- Integration tests in `backend/tests/Conduit.IntegrationTests/`
 
 **Frontend**:
-```bash
-cd frontend
-npm run build                                                     # Must succeed
-npm run test                                                      # All unit tests pass
-npm run test:e2e                                                  # All E2E tests pass (optional)
-```
+<Patterns the implementing agent should follow, e.g.:>
+- Angular signals for reactive state management
+- Standalone components with explicit imports
+- Co-located unit tests (`.test.ts` files alongside source)
+- RxJS observables for async operations
+- Service-based API integration
 
-**Checklist**:
-- ✅ Backend builds (0 errors)
-- ✅ All backend unit tests pass
-- ✅ All backend integration tests pass
-- ✅ Frontend builds (0 errors)
-- ✅ All frontend unit tests pass
-- ✅ Manual testing confirms feature works as specified
-- ✅ No regressions in existing functionality
+---
 
-## 5) Implementation Notes
+## 2. Implementation Milestones
 
-### Dependencies
-- <List any dependencies on other features or external systems>
-- <List any feature dependencies that depend on this>
+> **Instructions for Implementation Agent**: 
+> Work through milestones sequentially. Mark files complete as you create/modify them.
+> After each milestone, run the verification steps before proceeding.
 
-### Critical Implementation Order (if applicable)
-<Only include if there's a critical order to implementation steps, otherwise omit>
+### Milestone 1: <Descriptive Name>
+**Goal**: <One sentence describing what this milestone achieves>
 
-### References
+**Scope** (~5-10 files):
+- [ ] `backend/src/Conduit/Domain/<Entity>.cs` - <Brief purpose>
+- [ ] `backend/src/Conduit/Infrastructure/ConduitContext.cs` - <What changes>
+- [ ] `backend/tests/Conduit.UnitTests/Domain/<Tests>.cs` - <Test coverage>
+- [ ] ...
+
+**Implementation Guidance**:
+- <High-level approach or pattern to use>
+- **Watch out for**: <Potential pitfall or edge case>
+- <Any non-obvious considerations>
+
+**Verification**:
+- [ ] `dotnet build backend/src/Conduit/` succeeds
+- [ ] Unit tests in `backend/tests/Conduit.UnitTests/` pass
+- [ ] <Specific behavior to manually verify, if applicable>
+
+---
+
+### Milestone 2: <Descriptive Name>
+**Goal**: <One sentence describing what this milestone achieves>
+
+**Scope** (~5-10 files):
+- [ ] `backend/src/Conduit/Features/<Feature>/<Command>.cs` - <Purpose>
+- [ ] `backend/src/Conduit/Features/<Feature>/<Validator>.cs` - <Validation rules>
+- [ ] `backend/src/Conduit/Features/<Feature>/<Handler>.cs` - <Business logic>
+- [ ] `backend/tests/Conduit.UnitTests/Features/<Feature>/<Tests>.cs` - <Test coverage>
+- [ ] ...
+
+**Implementation Guidance**:
+- <High-level approach>
+- **Edge Cases**: <Critical edge cases to handle>
+- **Watch out for**: <Potential pitfall>
+
+**Verification**:
+- [ ] `dotnet build backend/src/Conduit/` succeeds
+- [ ] All unit tests pass
+- [ ] <Specific behavior to verify>
+
+---
+
+### Milestone 3: <Descriptive Name>
+**Goal**: <One sentence>
+
+**Scope** (~5-10 files):
+- [ ] `frontend/src/app/core/services/<service>.service.ts` - <Purpose>
+- [ ] `frontend/src/app/core/services/<service>.service.test.ts` - <Test coverage>
+- [ ] `frontend/src/app/features/<feature>/components/<component>.component.ts` - <UI component>
+- [ ] `frontend/src/app/features/<feature>/components/<component>.component.test.ts` - <Tests>
+- [ ] ...
+
+**Implementation Guidance**:
+- <Approach for state management, API integration, etc.>
+- **UI Patterns**: <Any specific UI patterns or components to use>
+- **Watch out for**: <Frontend-specific pitfalls>
+
+**Verification**:
+- [ ] `npm run build` succeeds (from frontend/)
+- [ ] `npm run test` passes
+- [ ] <Manual verification if needed>
+
+---
+
+### Milestone 4: <Integration Tests>
+**Goal**: Add integration tests for end-to-end scenarios
+
+**Scope** (~5-10 files):
+- [ ] `backend/tests/Conduit.IntegrationTests/Features/<Feature>/<Test>.cs` - <Scenario>
+- [ ] ...
+
+**Implementation Guidance**:
+- Test full request/response cycles
+- Cover authentication/authorization
+- Verify database state changes
+- **Critical Scenarios**: <Most important flows to test>
+
+**Verification**:
+- [ ] `dotnet test backend/tests/Conduit.IntegrationTests/` passes
+- [ ] All integration test scenarios pass
+
+---
+
+## 3. Cross-Cutting Concerns
+
+### Edge Cases & Pitfalls
+<List critical edge cases that span multiple milestones or are easy to miss>
+
+**Authentication/Authorization**:
+- <Edge cases related to auth>
+
+**Data Integrity**:
+- <Edge cases related to data consistency>
+
+**Concurrency**:
+- <Edge cases related to race conditions, if applicable>
+
+### Performance Considerations
+<Any performance concerns the agent should be aware of, if applicable>
+
+### Security Considerations
+<Any security concerns beyond standard auth, if applicable>
+
+---
+
+## 4. Final Verification
+
+> **Complete this checklist after all milestones are done**
+
+### Build Verification
+- [ ] Backend builds: `cd backend; dotnet build Conduit.sln` succeeds (0 errors)
+- [ ] Backend unit tests: `cd backend; dotnet test tests/Conduit.UnitTests/` passes (all tests)
+- [ ] Backend integration tests: `cd backend; dotnet test tests/Conduit.IntegrationTests/` passes (all tests)
+- [ ] Frontend builds: `cd frontend; npm run build` succeeds (0 errors)
+- [ ] Frontend unit tests: `cd frontend; npm run test` passes (all tests)
+
+### Functional Verification
+<List 3-5 key user flows that should work end-to-end>
+- [ ] <User can [do X]>
+- [ ] <User can [do Y]>
+- [ ] <Edge case Z is handled correctly>
+
+### Regression Check
+- [ ] No existing tests are broken
+- [ ] No regressions in related features
+
+---
+
+## 5. Dependencies & References
+
+### Depends On
+<List features or components this feature requires, if any>
+
+### Depended On By
+<List features that will build on this feature, if any>
+
+### Related Documentation
 - Feature spec: `.github/specs/<kebab-case-name>/spec.md`
 - Related features: <list if applicable>
+
+---
+
+## Notes for Implementation Agent
+
+<Any additional strategic guidance, gotchas, or context that doesn't fit above.
+Keep this section short and high-level.>

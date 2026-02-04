@@ -2,18 +2,12 @@
 Technical implementation plans live at: .github/specs/<kebab-case-name>/plan.md
 
 This plan provides HIGH-LEVEL strategic guidance for a capable AI agent to implement a feature.
-Focus on architecture, approach, patterns, edge cases, and gotchas - NOT detailed implementations.
+Focus on architecture, approach, patterns, edge cases, and gotchas - NOT written out classes.
 
 ⚠️ CRITICAL: DO NOT INCLUDE:
-- Code fragments, class definitions, or method implementations
-- Detailed property lists or method signatures
-- Complete validation rules or business logic code
+- Full class or method implementations in code
 - UI component templates or detailed styling
 
-The implementing agent is capable - provide strategic direction, not code.
-
-The plan is organized into milestones (5-10 files each) that can be independently verified.
-Implementation agents should mark milestones as complete as they progress through the work.
 -->
 
 # Technical Implementation Plan: <feature-name>

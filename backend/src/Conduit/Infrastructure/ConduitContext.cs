@@ -19,6 +19,11 @@ public class ConduitContext(DbContextOptions options) : DbContext(options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Article>(b =>
+        {
+            b.HasIndex(a => a.IsDraft);
+        });
+
         modelBuilder.Entity<ArticleTag>(b =>
         {
             b.HasKey(t => new { t.ArticleId, t.TagId });

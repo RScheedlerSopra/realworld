@@ -11,4 +11,6 @@ export interface Article {
   favorited: boolean;
   favoritesCount: number;
   author: Profile;
+  isDraft?: boolean;
+  articleId?: number;
 }

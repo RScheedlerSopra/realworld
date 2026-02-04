@@ -52,9 +52,21 @@
               </div>
             </fieldset>
 
-            <button class="btn btn-lg pull-xs-right btn-primary" type="button" (click)="submitForm()">
-              Publish Article
-            </button>
+            @if (!isDraft() || draftId()) {
+              <button class="btn btn-lg pull-xs-right btn-primary" type="button" (click)="submitForm()">
+                Publish Article
+              </button>
+            }
+            @if (isDraft() || isNewArticle()) {
+              <button
+                class="btn btn-lg pull-xs-right btn-secondary"
+                type="button"
+                (click)="saveDraft()"
+                style="margin-right: 10px"
+              >
+                Save Draft
+              </button>
+            }
           </fieldset>
         </form>
       </div>

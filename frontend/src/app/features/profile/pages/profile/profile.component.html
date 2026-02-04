@@ -54,6 +54,18 @@
                   Favorited Posts
                 </a>
               </li>
+              @if (isUser()) {
+                <li class="nav-item">
+                  <a
+                    class="nav-link"
+                    routerLinkActive="active"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    [routerLink]="['/profile', p.username, 'drafts']"
+                  >
+                    My Drafts
+                  </a>
+                </li>
+              }
             </ul>
           </div>
 

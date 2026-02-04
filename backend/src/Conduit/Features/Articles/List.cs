@@ -30,6 +30,9 @@ public class List
         {
             var queryable = context.Articles.GetAllData();
 
+            // Exclude drafts from all article lists
+            queryable = queryable.Where(x => !x.IsDraft);
+
             if (message.IsFeed && currentUserAccessor.GetCurrentUsername() != null)
             {
                 var currentUser = await context

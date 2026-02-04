@@ -7,7 +7,8 @@ Focus on architecture, approach, patterns, edge cases, and gotchas - NOT written
 ⚠️ CRITICAL: DO NOT INCLUDE:
 - Full class or method implementations in code
 - UI component templates or detailed styling
-
+- E2E test generation
+- E2E test validation steps (they will never pass) -> ask user instead to run E2E tests manually when everything else is done
 -->
 
 # Technical Implementation Plan: <feature-name>
@@ -92,15 +93,6 @@ graph TD
 - [ ] Backend integration tests: `cd backend; dotnet test tests/Conduit.IntegrationTests/` passes (all tests)
 - [ ] Frontend builds: `cd frontend; npm run build` succeeds (0 errors)
 - [ ] Frontend unit tests: `cd frontend; npm run test` passes (all tests)
-
-### Functional Verification
-<List 3-5 key user flows that should work end-to-end>
-- [ ] <User can [do X]>
-- [ ] <User can [do Y]>
-- [ ] <Edge case Z is handled correctly>
-
-### Regression Check
-- [ ] No existing tests are broken
 
 ---
 

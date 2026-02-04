@@ -404,7 +404,9 @@ The following capabilities are explicitly NOT supported:
    - Components, services, guards, utilities, and pipes require test coverage
    - Tests should cover both happy paths and error scenarios
 4. **Test Runner**: Frontend tests use Vitest (run with `npm run test`)
-5. **E2E Testing**: Use Playwright for end-to-end tests (run with `npm run test:e2e`)
+
+### Frontend Integration & E2E Testing
+Do not run the frontend E2E tests as they will never pass. When you want to run E2E tests, instead run only the unit tests.
 
 ## Related Documentation
 

@@ -387,8 +387,8 @@ The following capabilities are explicitly NOT supported:
 ### Frontend Unit Testing
 1. **Co-location**: All frontend unit tests must be co-located with the source files they test
    - Place test files in the same directory as the source file
-   - Example: `components/button.component.ts` → `components/button.component.test.ts`
-2. **Naming Convention**: Use `*.test.ts` naming format for all test files
+   - Example: `components/button.component.ts` → `components/button.component.spec.ts`
+2. **Naming Convention**: Use `*.spec.ts` naming format for all test files
 3. **Test Coverage**: All frontend code must have unit tests
    - Components, services, guards, utilities, and pipes require test coverage
    - Tests should cover both happy paths and error scenarios

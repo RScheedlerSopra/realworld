@@ -10,10 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 // read database configuration (database provider + database connection) from environment variables
-//Environment.GetEnvironmentVariable(DEFAULT_DATABASE_PROVIDER)
-//Environment.GetEnvironmentVariable(DEFAULT_DATABASE_CONNECTION_STRING)
-var defaultDatabaseConnectionString = "Filename=realworld.db";
-var defaultDatabaseProvider = "sqlite";
+var defaultDatabaseConnectionString = Environment.GetEnvironmentVariable("ASPNETCORE_Conduit_ConnectionString") ?? "Filename=realworld.db";
+var defaultDatabaseProvider = Environment.GetEnvironmentVariable("ASPNETCORE_Conduit_DatabaseProvider") ?? "sqlite";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -126,9 +124,8 @@ app.UseSwaggerUI(x => x.SwaggerEndpoint("/swagger/v1/swagger.json", "RealWorld A
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope
+    await scope
         .ServiceProvider.GetRequiredService<ConduitContext>()
-        .Database.EnsureCreated();
-    // use context
+        .Database.MigrateAsync();
 }
 app.Run();

@@ -30,6 +30,86 @@ This is using ASP.NET Core with:
 
 This basic architecture is based on this reference architecture: [https://github.com/jbogard/ContosoUniversityCore](https://github.com/jbogard/ContosoUniversityCore)
 
+## Database Migrations
+
+This project uses Entity Framework Core Migrations to manage database schema changes. Migrations provide version control for your database schema and enable safe, incremental updates across environments.
+
+### Automatic Migration on Startup
+
+The application automatically applies pending migrations when it starts up. This ensures the database schema is always up-to-date with the latest migration.
+
+### Creating New Migrations
+
+When you make changes to the domain entities or `ConduitContext`, create a new migration:
+
+```bash
+dotnet ef migrations add <MigrationName> --project src/Conduit --startup-project src/Conduit
+```
+
+Example:
+```bash
+dotnet ef migrations add AddUserProfileIndex --project src/Conduit --startup-project src/Conduit
+```
+
+### Viewing Migration Information
+
+To see information about your DbContext and migrations:
+
+```bash
+# View DbContext information
+dotnet ef dbcontext info --project src/Conduit
+
+# List all migrations
+dotnet ef migrations list --project src/Conduit
+```
+
+### Rolling Back Migrations
+
+To rollback to a previous migration state:
+
+```bash
+# Revert to a specific migration
+dotnet ef database update <PreviousMigrationName> --project src/Conduit
+
+# Example: Revert to InitialCreate
+dotnet ef database update InitialCreate --project src/Conduit
+
+# To completely remove the last migration (if not yet applied)
+dotnet ef migrations remove --project src/Conduit
+```
+
+### Environment Configuration
+
+The application reads database configuration from environment variables:
+
+- `ASPNETCORE_Conduit_DatabaseProvider` - Database provider (`sqlite` or `sqlserver`)
+- `ASPNETCORE_Conduit_ConnectionString` - Database connection string
+
+If not set, defaults to SQLite with `Filename=realworld.db` for local development.
+
+**Docker Configuration:**
+
+When running via Docker Compose, these variables are set in `docker-compose.yml`.
+
+**Local Development:**
+
+For local development with default SQLite, no environment variables are needed. The database file `realworld.db` will be created in the project directory.
+
+### Migration Files
+
+Migration files are located in `src/Conduit/Migrations/`:
+- `<timestamp>_<MigrationName>.cs` - Migration operations (Up/Down)
+- `<timestamp>_<MigrationName>.Designer.cs` - Migration metadata
+- `ConduitContextModelSnapshot.cs` - Current model snapshot
+
+### Best Practices
+
+1. **Always create a migration** when modifying entities or DbContext configuration
+2. **Test migrations locally** before deploying to production
+3. **Never modify migration files** after they've been committed and shared
+4. **Use descriptive names** for migrations (e.g., `AddArticleTagIndex` not `Update1`)
+5. **Review generated migrations** to ensure they match your intent
+
 ## Getting started
 
 Install the .NET Core SDK and lots of documentation: [https://www.microsoft.com/net/download/core](https://www.microsoft.com/net/download/core)

@@ -19,7 +19,8 @@ You are a software architect and senior developer. Your goal is to write a detai
 3. Create a mermaid architecture overview for the feature in line with the existing system architecture
 
 ### Technical implementation plan
-4. Copy the plan template from `.github/templates/plan.template.md` into the new spec folder.
+4. If the user did not clarify it already use the #askUser tool to ask if this is a large or medium feature.
+4. Copy the plan template from `.github/templates/plan-{medium/large}-template.md` into the new spec folder.
 5. Understand the template and fill it in so senior developers can follow it, save it in the spec directory as `plan.md`. 
 6. Use the #runSubagent tool to spawn a subagent. Ask the subagent to check the generated plan.md against the template. It should detect things that are missing and things that are undesired.
 7. Ask the user to review the plan and whether you can continue. Apply any suggestions of the users first.

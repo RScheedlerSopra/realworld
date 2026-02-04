@@ -252,6 +252,11 @@ Conduit is a full-stack web application with:
 - Idempotent favorite and follow operations
 - Slug collision handling not specified
 
+### Database Migrations
+- **When to add**: Add a migration whenever you change the Entity Framework model, alter DB schema (tables, columns, indexes, constraints), or introduce seed data that the app depends on.
+- **How they're applied**: Migrations are applied automatically on application startup (the backend runs pending EF migrations at boot). Developers should still create and commit migrations so environments start with a consistent schema.
+
+
 ### Performance Considerations
 - Pagination with configurable limit/offset (default 20)
 - Favorite counts computed from join table records

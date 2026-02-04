@@ -46,6 +46,7 @@ graph TD
 - JWT authentication via `[Authorize]` attribute
 - Unit tests in `backend/tests/Conduit.UnitTests/` mirroring feature structure
 - Integration tests in `backend/tests/Conduit.IntegrationTests/`
+- Migration management via EF Core Migrations (executed automatically at startup)
 
 **Frontend**:
 <Patterns the implementing agent should follow, e.g.:>

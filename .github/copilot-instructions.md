@@ -383,6 +383,17 @@ The following capabilities are explicitly NOT supported:
 9. **Coverage**: Aim for 80%+ coverage on business logic, skip only trivial code (DTOs, getters/setters)
 10. **Run**: Execute with `dotnet test backend/tests/Conduit.UnitTests/` or through IDE test explorers
 
+### Backend Integration Testing
+
+1. **Location**: Place integration tests in `backend/tests/Conduit.IntegrationTests/`.
+2. **Purpose**: Verify end-to-end feature behavior using the application's startup pipeline and data access layers.
+3. **Framework**: Prefer xUnit with `FluentAssertions`; use `Microsoft.AspNetCore.TestHost`/`WebApplicationFactory` or a test database to exercise the real pipeline. Mock external dependencies as needed.
+4. **Run**: Execute integration tests with:
+
+   `dotnet test backend/tests/Conduit.IntegrationTests/ --verbosity minimal`
+
+5. **Notes**: Run integration tests separately from unit tests. Ensure test data isolation and cleanup between runs to keep results deterministic.
+
 
 ### Frontend Unit Testing
 1. **Co-location**: All frontend unit tests must be co-located with the source files they test

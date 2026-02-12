@@ -13,7 +13,7 @@
       <div class="container">
         <div class="row">
           <div class="col-xs-12 col-md-10 offset-md-1">
-            <img [src]="p.image" class="user-img" />
+            <img [src]="p.image || '/assets/pf.png'" class="user-img" />
             <h4>{{ p.username }}</h4>
             <p>{{ p.bio }}</p>
             @if (!isUser()) {

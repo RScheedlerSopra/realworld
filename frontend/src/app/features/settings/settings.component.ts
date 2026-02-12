@@ -45,7 +45,10 @@ export default class SettingsComponent implements OnInit {
   ngOnInit(): void {
     const user = this.userService.getCurrentUserSync();
     if (user) {
-      this.settingsForm.patchValue(user);
+      this.settingsForm.patchValue({
+        ...user,
+        image: user.image || '',
+      });
     }
   }
 

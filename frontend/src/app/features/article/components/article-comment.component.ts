@@ -18,7 +18,7 @@ import { AsyncPipe, DatePipe } from '@angular/common';
         </div>
         <div class="card-footer">
           <a class="comment-author" [routerLink]="['/profile', comment.author.username]">
-            <img [src]="comment.author.image" class="comment-author-img" />
+            <img [src]="comment.author.image || '/assets/pf.png'" class="comment-author-img" />
           </a>
           &nbsp;
           <a class="comment-author" [routerLink]="['/profile', comment.author.username]">

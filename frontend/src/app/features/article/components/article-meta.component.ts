@@ -8,7 +8,7 @@ import { DatePipe } from '@angular/common';
   template: `
     <div class="article-meta">
       <a [routerLink]="['/profile', article.author.username]">
-        <img [src]="article.author.image" />
+        <img [src]="article.author.image || '/assets/pf.png'" />
       </a>
 
       <div class="info">

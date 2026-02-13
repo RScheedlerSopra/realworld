@@ -22,6 +22,8 @@ public class Create
         public string? Body { get; init; }
 
         public string[]? TagList { get; init; }
+
+        public bool? IsDraft { get; init; }
     }
 
     public class ArticleDataValidator : AbstractValidator<ArticleData>
@@ -77,6 +79,7 @@ public class Create
                 Description = message.Article.Description,
                 Title = message.Article.Title,
                 Slug = message.Article.Title.GenerateSlug(),
+                IsDraft = message.Article.IsDraft ?? false,
             };
             await context.Articles.AddAsync(article, cancellationToken);
 

@@ -12,7 +12,7 @@ public class List
 {
     public record Query(string Slug) : IRequest<CommentsEnvelope>;
 
-    public class QueryHandler(ConduitContext context) : IRequestHandler<Query, CommentsEnvelope>
+    public class QueryHandler(ConduitContext context, ICurrentUserAccessor currentUserAccessor) : IRequestHandler<Query, CommentsEnvelope>
     {
         public async Task<CommentsEnvelope> Handle(
             Query message,
@@ -20,8 +20,10 @@ public class List
         )
         {
             var article = await context
-                .Articles.Include(x => x.Comments)
+                .Articles
+                .Include(x => x.Comments)
                 .ThenInclude(x => x.Author)
+                .Include(x => x.Author)
                 .FirstOrDefaultAsync(x => x.Slug == message.Slug, cancellationToken);
 
             if (article == null)
@@ -30,6 +32,19 @@ public class List
                     HttpStatusCode.NotFound,
                     new { Article = Constants.NOT_FOUND }
                 );
+            }
+
+            // Prevent listing comments on draft articles unless user is the author
+            if (article.IsDraft)
+            {
+                var currentUsername = currentUserAccessor.GetCurrentUsername();
+                if (article.Author?.Username != currentUsername)
+                {
+                    throw new RestException(
+                        HttpStatusCode.Forbidden,
+                        new { Article = "Cannot view comments on draft articles" }
+                    );
+                }
             }
 
             return new CommentsEnvelope(article.Comments);

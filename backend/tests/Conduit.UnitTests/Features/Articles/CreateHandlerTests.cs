@@ -170,4 +170,103 @@ public class CreateHandlerTests : HandlerTestBase
         result.Article.Should().NotBeNull();
         result.Article!.Slug.Should().Be("this-is-a-test-article-title");
     }
+
+    [Fact]
+    public async Task Handle_ShouldCreateDraft_WhenIsDraftIsTrue()
+    {
+        // Arrange
+        var author = new Person
+        {
+            Username = "testuser",
+            Email = "test@example.com"
+        };
+        Context.Persons.Add(author);
+        await Context.SaveChangesAsync();
+
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("testuser");
+
+        var command = new Create.Command(
+            Article: new Create.ArticleData
+            {
+                Title = "Draft Article",
+                Description = "Draft Description",
+                Body = "Draft Body",
+                IsDraft = true
+            }
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Article.Should().NotBeNull();
+        result.Article!.IsDraft.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_ShouldCreatePublishedArticle_WhenIsDraftIsFalse()
+    {
+        // Arrange
+        var author = new Person
+        {
+            Username = "testuser",
+            Email = "test@example.com"
+        };
+        Context.Persons.Add(author);
+        await Context.SaveChangesAsync();
+
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("testuser");
+
+        var command = new Create.Command(
+            Article: new Create.ArticleData
+            {
+                Title = "Published Article",
+                Description = "Published Description",
+                Body = "Published Body",
+                IsDraft = false
+            }
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Article.Should().NotBeNull();
+        result.Article!.IsDraft.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_ShouldDefaultToPublished_WhenIsDraftIsNull()
+    {
+        // Arrange
+        var author = new Person
+        {
+            Username = "testuser",
+            Email = "test@example.com"
+        };
+        Context.Persons.Add(author);
+        await Context.SaveChangesAsync();
+
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("testuser");
+
+        var command = new Create.Command(
+            Article: new Create.ArticleData
+            {
+                Title = "Article Without Draft Flag",
+                Description = "Description",
+                Body = "Body",
+                IsDraft = null
+            }
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Article.Should().NotBeNull();
+        result.Article!.IsDraft.Should().BeFalse();
+    }
 }

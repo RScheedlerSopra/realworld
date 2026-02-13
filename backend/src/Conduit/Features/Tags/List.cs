@@ -16,8 +16,12 @@ public class List
     {
         public async Task<TagsEnvelope> Handle(Query message, CancellationToken cancellationToken)
         {
+            // Only include tags from published articles (exclude draft-only tags)
             var tags = await context
-                .Tags.OrderBy(x => x.TagId)
+                .Tags
+                .Where(t => context.ArticleTags
+                    .Any(at => at.TagId == t.TagId && !at.Article!.IsDraft))
+                .OrderBy(x => x.TagId)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
             return new TagsEnvelope

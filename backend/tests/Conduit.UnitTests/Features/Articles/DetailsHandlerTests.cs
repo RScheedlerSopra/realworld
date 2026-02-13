@@ -3,20 +3,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using Conduit.Domain;
 using Conduit.Features.Articles;
+using Conduit.Infrastructure;
 using Conduit.Infrastructure.Errors;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using Xunit;
 
 namespace Conduit.UnitTests.Features.Articles;
 
 public class DetailsHandlerTests : HandlerTestBase
 {
+    private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly Details.QueryHandler _handler;
 
     public DetailsHandlerTests()
     {
-        _handler = new Details.QueryHandler(Context);
+        _currentUserAccessor = new Mock<ICurrentUserAccessor>();
+        _handler = new Details.QueryHandler(Context, _currentUserAccessor.Object);
     }
 
     [Fact]

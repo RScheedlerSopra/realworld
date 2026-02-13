@@ -29,7 +29,7 @@ public class Delete
         {
             var article =
                 await context.Articles.FirstOrDefaultAsync(
-                    x => x.Slug == message.Slug,
+                    x => x.Slug == message.Slug && !x.IsDraft,
                     cancellationToken
                 )
                 ?? throw new RestException(

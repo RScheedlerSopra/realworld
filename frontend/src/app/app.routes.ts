@@ -36,6 +36,11 @@ export const routes: Routes = [
     canActivate: [requireAuth],
   },
   {
+    path: 'drafts',
+    loadComponent: () => import('./features/article/pages/drafts/drafts.component'),
+    canActivate: [requireAuth],
+  },
+  {
     path: 'profile',
     loadChildren: () => import('./features/profile/profile.routes'),
   },

@@ -24,6 +24,10 @@ export class ArticlesService {
     );
   }
 
+  listDrafts(): Observable<{ articles: Article[]; articlesCount: number }> {
+    return this.http.get<{ articles: Article[]; articlesCount: number }>('/articles/drafts');
+  }
+
   get(slug: string): Observable<Article> {
     return this.http.get<{ article: Article }>(`/articles/${slug}`).pipe(map(data => data.article));
   }
@@ -42,6 +46,10 @@ export class ArticlesService {
         article: article,
       })
       .pipe(map(data => data.article));
+  }
+
+  publishArticle(slug: string): Observable<Article> {
+    return this.http.put<{ article: Article }>(`/articles/${slug}/publish`, {}).pipe(map(data => data.article));
   }
 
   favorite(slug: string): Observable<Article> {

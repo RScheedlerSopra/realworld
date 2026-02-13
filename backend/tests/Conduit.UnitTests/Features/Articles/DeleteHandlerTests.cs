@@ -1,23 +1,28 @@
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Conduit.Domain;
 using Conduit.Features.Articles;
+using Conduit.Infrastructure;
 using Conduit.Infrastructure.Errors;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using Xunit;
 
 namespace Conduit.UnitTests.Features.Articles;
 
 public class DeleteHandlerTests : HandlerTestBase
 {
+    private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly Delete.QueryHandler _handler;
 
     public DeleteHandlerTests()
     {
-        _handler = new Delete.QueryHandler(Context);
+        _currentUserAccessor = new Mock<ICurrentUserAccessor>();
+        _handler = new Delete.QueryHandler(Context, _currentUserAccessor.Object);
     }
 
     [Fact]
@@ -45,6 +50,8 @@ public class DeleteHandlerTests : HandlerTestBase
         Context.Articles.Add(article);
         await Context.SaveChangesAsync();
 
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("testuser");
+
         var articleId = article.ArticleId;
         var command = new Delete.Command(Slug: "test-article");
 
@@ -60,6 +67,7 @@ public class DeleteHandlerTests : HandlerTestBase
     public async Task Handle_ShouldThrowRestException_WhenArticleDoesNotExist()
     {
         // Arrange
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("testuser");
         var command = new Delete.Command(Slug: "non-existent-article");
 
         // Act
@@ -68,6 +76,82 @@ public class DeleteHandlerTests : HandlerTestBase
         // Assert
         await act.Should().ThrowAsync<RestException>()
             .Where(e => e.Code == System.Net.HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldThrowForbidden_WhenUserNotAuthor()
+    {
+        // Arrange
+        var author = new Person
+        {
+            Username = "author",
+            Email = "author@example.com"
+        };
+
+        var article = new Article
+        {
+            Title = "Test Article",
+            Slug = "test-article",
+            Description = "Test Description",
+            Body = "Test Body",
+            Author = author,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        Context.Persons.Add(author);
+        Context.Articles.Add(article);
+        await Context.SaveChangesAsync();
+
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("otheruser");
+
+        var command = new Delete.Command(Slug: "test-article");
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<RestException>()
+            .Where(e => e.Code == HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldDeleteDraft_WhenAuthorDeletes()
+    {
+        // Arrange
+        var author = new Person
+        {
+            Username = "testuser",
+            Email = "test@example.com"
+        };
+
+        var draft = new Article
+        {
+            Title = "Draft Article",
+            Slug = "draft-article",
+            Description = "Draft Description",
+            Body = "Draft Body",
+            IsDraft = true,
+            Author = author,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        Context.Persons.Add(author);
+        Context.Articles.Add(draft);
+        await Context.SaveChangesAsync();
+
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("testuser");
+
+        var articleId = draft.ArticleId;
+        var command = new Delete.Command(Slug: "draft-article");
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var deletedArticle = await Context.Articles.FindAsync(articleId);
+        deletedArticle.Should().BeNull();
     }
 
     [Fact]
@@ -106,6 +190,8 @@ public class DeleteHandlerTests : HandlerTestBase
             Tag = tag
         });
         await Context.SaveChangesAsync();
+
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("testuser");
 
         var articleId = article.ArticleId;
         var command = new Delete.Command(Slug: "test-article");
@@ -168,6 +254,8 @@ public class DeleteHandlerTests : HandlerTestBase
         });
         await Context.SaveChangesAsync();
 
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("author");
+
         var articleId = article.ArticleId;
         var command = new Delete.Command(Slug: "test-article");
 
@@ -229,6 +317,8 @@ public class DeleteHandlerTests : HandlerTestBase
         };
         Context.Comments.Add(comment);
         await Context.SaveChangesAsync();
+
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("author");
 
         var articleId = article.ArticleId;
         var commentId = comment.CommentId;

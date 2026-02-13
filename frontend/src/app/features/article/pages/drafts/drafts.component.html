@@ -1,0 +1,60 @@
+<div class="drafts-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-10 offset-md-1">
+        <h1>Your Drafts</h1>
+
+        @if (errorMessage()) {
+          <div class="error-messages">
+            <ul>
+              <li>{{ errorMessage() }}</li>
+            </ul>
+          </div>
+        }
+
+        @if (isLoading()) {
+          <div class="article-preview">Loading drafts...</div>
+        } @else if (drafts().length === 0) {
+          <div class="article-preview">
+            <p>No drafts yet. <a routerLink="/editor">Start writing!</a></p>
+          </div>
+        } @else {
+          @for (draft of drafts(); track draft.slug) {
+            <div class="article-preview">
+              <div class="article-meta">
+                <a [routerLink]="['/@' + draft.author.username]">
+                  <img [src]="draft.author.image" alt="Author image" />
+                </a>
+                <div class="info">
+                  <a [routerLink]="['/@' + draft.author.username]" class="author">
+                    {{ draft.author.username }}
+                  </a>
+                  <span class="date">{{ draft.updatedAt | date: 'longDate' }}</span>
+                </div>
+                <div class="pull-xs-right">
+                  <button class="btn btn-sm btn-outline-primary" (click)="editDraft(draft.slug)">
+                    <i class="ion-edit"></i> Edit
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="deleteDraft(draft.slug, $event)">
+                    <i class="ion-trash-a"></i> Delete
+                  </button>
+                </div>
+              </div>
+
+              <a (click)="editDraft(draft.slug)" class="preview-link" style="cursor: pointer">
+                <h1>{{ draft.title }}</h1>
+                <p>{{ draft.description }}</p>
+                <span>Read more...</span>
+                <ul class="tag-list">
+                  @for (tag of draft.tagList; track tag) {
+                    <li class="tag-default tag-pill tag-outline">{{ tag }}</li>
+                  }
+                </ul>
+              </a>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</div>

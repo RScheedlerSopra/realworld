@@ -34,6 +34,14 @@ public class ArticlesController(IMediator mediator) : Controller
             cancellationToken
         );
 
+    [HttpGet("drafts")]
+    [Authorize(AuthenticationSchemes = JwtIssuerOptions.Schemes)]
+    public Task<ArticlesEnvelope> GetDrafts(
+        [FromQuery] int? limit,
+        [FromQuery] int? offset,
+        CancellationToken cancellationToken
+    ) => mediator.Send(new ListDrafts.Query(limit, offset), cancellationToken);
+
     [HttpGet("{slug}")]
     public Task<ArticleEnvelope> Get(string slug, CancellationToken cancellationToken) =>
         mediator.Send(new Details.Query(slug), cancellationToken);
@@ -52,6 +60,11 @@ public class ArticlesController(IMediator mediator) : Controller
         [FromBody] Edit.Model model,
         CancellationToken cancellationToken
     ) => mediator.Send(new Edit.Command(model, slug), cancellationToken);
+
+    [HttpPut("{slug}/publish")]
+    [Authorize(AuthenticationSchemes = JwtIssuerOptions.Schemes)]
+    public Task<ArticleEnvelope> Publish(string slug, CancellationToken cancellationToken) =>
+        mediator.Send(new Publish.Command(slug), cancellationToken);
 
     [HttpDelete("{slug}")]
     [Authorize(AuthenticationSchemes = JwtIssuerOptions.Schemes)]

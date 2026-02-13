@@ -4,19 +4,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using Conduit.Domain;
 using Conduit.Features.Comments;
+using Conduit.Infrastructure;
 using Conduit.Infrastructure.Errors;
 using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace Conduit.UnitTests.Features.Comments;
 
 public class ListHandlerTests : HandlerTestBase
 {
+    private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly List.QueryHandler _handler;
 
     public ListHandlerTests()
     {
-        _handler = new List.QueryHandler(Context);
+        _currentUserAccessor = new Mock<ICurrentUserAccessor>();
+        _handler = new List.QueryHandler(Context, _currentUserAccessor.Object);
     }
 
     [Fact]

@@ -19,6 +19,9 @@ public class Article
 
     public string? Body { get; set; }
 
+    /// <summary>Indicates if this article is a draft (true) or published (false). Drafts are private to the author.</summary>
+    public bool IsDraft { get; set; }
+
     public Person? Author { get; init; }
 
     public List<Comment> Comments { get; init; } = new();

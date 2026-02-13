@@ -28,7 +28,7 @@ public class List
             CancellationToken cancellationToken
         )
         {
-            var queryable = context.Articles.GetAllData();
+            var queryable = context.Articles.GetAllData().Where(x => !x.IsDraft);
 
             if (message.IsFeed && currentUserAccessor.GetCurrentUsername() != null)
             {

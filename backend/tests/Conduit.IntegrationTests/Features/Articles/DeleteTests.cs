@@ -29,8 +29,9 @@ public class DeleteTests : SliceFixture
         var deleteCmd = new Delete.Command(slug);
 
         var dbContext = GetDbContext();
+        var currentUserAccessor = new StubCurrentUserAccessor(UserHelpers.DefaultUserName);
 
-        var articleDeleteHandler = new Delete.QueryHandler(dbContext);
+        var articleDeleteHandler = new Delete.QueryHandler(dbContext, currentUserAccessor);
         await articleDeleteHandler.Handle(deleteCmd, new System.Threading.CancellationToken());
 
         var dbArticle = await ExecuteDbContextAsync(db =>
@@ -63,8 +64,9 @@ public class DeleteTests : SliceFixture
         var deleteCmd = new Delete.Command(article.Slug ?? throw new InvalidOperationException());
 
         var dbContext = GetDbContext();
+        var currentUserAccessor = new StubCurrentUserAccessor(UserHelpers.DefaultUserName);
 
-        var articleDeleteHandler = new Delete.QueryHandler(dbContext);
+        var articleDeleteHandler = new Delete.QueryHandler(dbContext, currentUserAccessor);
         await articleDeleteHandler.Handle(deleteCmd, new System.Threading.CancellationToken());
 
         var dbArticle = await ExecuteDbContextAsync(db =>
@@ -112,8 +114,9 @@ public class DeleteTests : SliceFixture
         var deleteCmd = new Delete.Command(slug);
 
         var dbContext = GetDbContext();
+        var currentUserAccessor = new StubCurrentUserAccessor(UserHelpers.DefaultUserName);
 
-        var articleDeleteHandler = new Delete.QueryHandler(dbContext);
+        var articleDeleteHandler = new Delete.QueryHandler(dbContext, currentUserAccessor);
         await articleDeleteHandler.Handle(deleteCmd, new System.Threading.CancellationToken());
 
         var deleted = await ExecuteDbContextAsync(db =>

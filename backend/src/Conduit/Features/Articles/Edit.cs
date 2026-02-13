@@ -26,7 +26,7 @@ public class Edit
         public CommandValidator() => RuleFor(x => x.Model.Article).NotNull();
     }
 
-    public class Handler(ConduitContext context) : IRequestHandler<Command, ArticleEnvelope>
+    public class Handler(ConduitContext context, ICurrentUserAccessor currentUserAccessor) : IRequestHandler<Command, ArticleEnvelope>
     {
         public async Task<ArticleEnvelope> Handle(
             Command message,
@@ -35,6 +35,7 @@ public class Edit
         {
             var article = await context
                 .Articles.Include(x => x.ArticleTags) // include also the article tags since they also need to be updated
+                .Include(x => x.Author) // include author for authorization check
                 .Where(x => x.Slug == message.Slug)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -43,6 +44,16 @@ public class Edit
                 throw new RestException(
                     HttpStatusCode.NotFound,
                     new { Article = Constants.NOT_FOUND }
+                );
+            }
+
+            // Check authorization for draft articles
+            var currentUsername = currentUserAccessor.GetCurrentUsername();
+            if (article.IsDraft && article.Author?.Username != currentUsername)
+            {
+                throw new RestException(
+                    HttpStatusCode.Forbidden,
+                    new { Article = "You are not authorized to edit this draft" }
                 );
             }
 

@@ -263,4 +263,52 @@ describe('ArticlesService', () => {
       expect(true).toBe(true);
     });
   });
+
+  describe('listDrafts', () => {
+    it('should fetch user drafts', async () => {
+      const draftArticles = [
+        { ...mockArticle, isDraft: true },
+        { ...mockArticle, slug: 'draft-2', isDraft: true },
+      ];
+      const promise = firstValueFrom(service.listDrafts());
+      const req = httpMock.expectOne('/articles/drafts');
+      expect(req.request.method).toBe('GET');
+      req.flush({ articles: draftArticles, articlesCount: 2 });
+      const response = await promise;
+      expect(response.articles).toEqual(draftArticles);
+      expect(response.articlesCount).toBe(2);
+    });
+
+    it('should handle empty drafts list', async () => {
+      const promise = firstValueFrom(service.listDrafts());
+      const req = httpMock.expectOne('/articles/drafts');
+      req.flush({ articles: [], articlesCount: 0 });
+      const response = await promise;
+      expect(response.articles).toEqual([]);
+      expect(response.articlesCount).toBe(0);
+    });
+  });
+
+  describe('publishArticle', () => {
+    it('should publish a draft article', async () => {
+      const slug = 'draft-to-publish';
+      const publishedArticle = { ...mockArticle, slug, isDraft: false };
+      const promise = firstValueFrom(service.publishArticle(slug));
+      const req = httpMock.expectOne(`/articles/${slug}/publish`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual({});
+      req.flush({ article: publishedArticle });
+      const article = await promise;
+      expect(article.isDraft).toBe(false);
+    });
+
+    it('should handle publish errors', async () => {
+      const slug = 'already-published';
+      const errorResponse = { status: 400, statusText: 'Bad Request' };
+      const promise = firstValueFrom(service.publishArticle(slug));
+      const req = httpMock.expectOne(`/articles/${slug}/publish`);
+      req.flush('Article is already published', errorResponse);
+      await expect(promise).rejects.toMatchObject({ status: 400 });
+    });
+  });
 });

@@ -21,10 +21,33 @@ public class ListHandlerTests : HandlerTestBase
     public async Task Handle_ShouldReturnAllTags_WhenTagsExist()
     {
         // Arrange
+        var author = new Person { Username = "testuser", Email = "test@example.com" };
+        Context.Persons.Add(author);
+
         var tag1 = new Tag { TagId = "backend" };
         var tag2 = new Tag { TagId = "frontend" };
         var tag3 = new Tag { TagId = "test" };
         Context.Tags.AddRange(tag1, tag2, tag3);
+
+        var article = new Article
+        {
+            Title = "Test Article",
+            Slug = "test-article",
+            Description = "Desc",
+            Body = "Body",
+            IsDraft = false,
+            Author = author,
+            CreatedAt = System.DateTime.UtcNow,
+            UpdatedAt = System.DateTime.UtcNow
+        };
+        Context.Articles.Add(article);
+        await Context.SaveChangesAsync();
+
+        Context.ArticleTags.AddRange(
+            new ArticleTag { Article = article, Tag = tag1 },
+            new ArticleTag { Article = article, Tag = tag2 },
+            new ArticleTag { Article = article, Tag = tag3 }
+        );
         await Context.SaveChangesAsync();
 
         var query = new List.Query();
@@ -58,10 +81,33 @@ public class ListHandlerTests : HandlerTestBase
     public async Task Handle_ShouldReturnTagsInAlphabeticalOrder()
     {
         // Arrange
+        var author = new Person { Username = "testuser", Email = "test@example.com" };
+        Context.Persons.Add(author);
+
         var tag1 = new Tag { TagId = "zebra" };
         var tag2 = new Tag { TagId = "alpha" };
         var tag3 = new Tag { TagId = "beta" };
         Context.Tags.AddRange(tag1, tag2, tag3);
+
+        var article = new Article
+        {
+            Title = "Test Article",
+            Slug = "test-article",
+            Description = "Desc",
+            Body = "Body",
+            IsDraft = false,
+            Author = author,
+            CreatedAt = System.DateTime.UtcNow,
+            UpdatedAt = System.DateTime.UtcNow
+        };
+        Context.Articles.Add(article);
+        await Context.SaveChangesAsync();
+
+        Context.ArticleTags.AddRange(
+            new ArticleTag { Article = article, Tag = tag1 },
+            new ArticleTag { Article = article, Tag = tag2 },
+            new ArticleTag { Article = article, Tag = tag3 }
+        );
         await Context.SaveChangesAsync();
 
         var query = new List.Query();

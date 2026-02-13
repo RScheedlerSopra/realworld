@@ -33,7 +33,9 @@ public class Create
         )
         {
             var article = await context
-                .Articles.Include(x => x.Comments)
+                .Articles
+                .Include(x => x.Comments)
+                .Include(x => x.Author)
                 .FirstOrDefaultAsync(x => x.Slug == message.Slug, cancellationToken);
 
             if (article == null)
@@ -41,6 +43,15 @@ public class Create
                 throw new RestException(
                     HttpStatusCode.NotFound,
                     new { Article = Constants.NOT_FOUND }
+                );
+            }
+
+            // Prevent commenting on draft articles
+            if (article.IsDraft)
+            {
+                throw new RestException(
+                    HttpStatusCode.Forbidden,
+                    new { Article = "Cannot comment on draft articles" }
                 );
             }
 

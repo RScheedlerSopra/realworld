@@ -4,6 +4,12 @@
       <div class="col-md-10 offset-md-1 col-xs-12">
         <app-list-errors [errors]="errors()" />
 
+        @if (successMessage()) {
+          <div class="alert alert-success">
+            {{ successMessage() }}
+          </div>
+        }
+
         <form [formGroup]="articleForm">
           <fieldset [disabled]="isSubmitting()">
             <fieldset class="form-group">
@@ -52,7 +58,18 @@
               </div>
             </fieldset>
 
-            <button class="btn btn-lg pull-xs-right btn-primary" type="button" (click)="submitForm()">
+            @if (!currentSlug() || isDraft()) {
+              <button 
+                class="btn btn-lg btn-secondary" 
+                type="button" 
+                (click)="saveDraft()"
+                style="margin-right: 10px;"
+              >
+                Save as Draft
+              </button>
+            }
+
+            <button class="btn btn-lg pull-xs-right btn-primary" type="button" (click)="publishArticle()">
               Publish Article
             </button>
           </fieldset>

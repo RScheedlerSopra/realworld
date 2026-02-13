@@ -3,7 +3,7 @@
 ## 1. Architecture & Strategy
 
 ### System Context
-The article-drafts feature extends the existing article creation/editing workflow to allow authors to save incomplete work privately before publishing. Drafts are stored as separate entities from published articles, isolated from all public queries (feeds, searches, tag lists). When a draft is published, it converts to a standard Article entity with a generated slug, and the draft is deleted.
+The article-drafts feature extends the existing article creation/editing workflow to allow authors to save incomplete work privately before publishing. Drafts are stored as articles with an `IsDraft` boolean flag set to `true`, isolated from all public queries via boolean filtering. When a draft is published, the flag changes to `false` and the article becomes visible in feeds.
 
 ### Architecture Diagram
 ```mermaid
@@ -17,53 +17,54 @@ graph TD
     C --> G[ArticlesService.publishDraft]
     C --> H[ArticlesService.create Article]
     
-    D --> I[API: GET /drafts]
-    E --> J[API: DELETE /drafts/:id]
-    F --> K[API: POST/PUT /drafts/:id?]
-    G --> L[API: POST /drafts/:id/publish]
-    H --> M[API: POST /articles]
+    D --> I[API: GET /articles/drafts]
+    E --> J[API: DELETE /articles/:slug]
+    F --> K[API: POST/PUT /articles with isDraft=true]
+    G --> L[API: PUT /articles/:slug/publish]
+    H --> M[API: POST /articles with isDraft=false]
     
-    I --> N[Drafts.List Handler]
-    J --> O[Drafts.Delete Handler]
-    K --> P[Drafts.CreateOrUpdate Handler]
-    L --> Q[Drafts.Publish Handler]
+    I --> N[Articles.List Handler with Draft filter]
+    J --> O[Articles.Delete Handler]
+    K --> P[Articles.Create/Edit Handler]
+    L --> Q[Articles.Publish Handler]
     
-    N --> R[ConduitContext.Drafts]
+    N --> R[ConduitContext.Articles]
     O --> R
     P --> R
     Q --> R
-    Q --> S[ConduitContext.Articles]
     
-    R --> T[(Database: Drafts Table)]
-    S --> U[(Database: Articles Table)]
+    R --> S[(Database: Articles Table with IsDraft)]
 ```
 
 ### Key Design Decisions
-- **Separate Draft Entity vs Article Status Field**: Use a separate `Draft` entity rather than adding an `IsPublished` or `Status` field to `Article`. This ensures drafts cannot accidentally leak into existing article queries, tag popularity calculations, or feed generation. It also simplifies authorization (all draft operations check `Draft.AuthorId` instead of navigating `Article.Author.PersonId`).
+- **IsDraft Boolean Field**: Add an `IsDraft` boolean flag to the `Article` entity. This simplifies the data model (single entity, single tag relationship) and avoids data duplication. Fields and validation rules are identical for both states. `IsDraft = true` means draft, `IsDraft = false` means published.
   
-- **Draft ID-based Routing**: Drafts use integer `DraftId` for identification instead of slugs, since slugs are only generated upon publication. This avoids slug collision concerns during draft editing and aligns with the spec requirement that "Drafts do not generate slugs until published."
+- **Slug Generation Strategy**: Generate slugs immediately when creating draft articles (with IsDraft=true) to enable slug-based routing. Slugs may be regenerated if title changes before publishing. This provides consistent routing patterns for both drafts and published articles.
 
-- **Publish as One-Way Conversion**: Publishing transforms a draft into a new Article entity and deletes the draft. This enforces the spec requirement that "Published articles cannot be converted back to drafts" and keeps the data model simple without bidirectional state transitions.
+- **Query Filtering for Isolation**: All existing article queries (feeds, profiles, tags) must explicitly filter `WHERE IsDraft = false` to exclude drafts. This requires updating existing handlers and queries to prevent draft leakage. New "list drafts" queries filter `WHERE IsDraft = true AND AuthorId = currentUser`.
 
-- **No Draft Sharing or Collaboration**: Drafts are strictly private (only accessible to author). No endpoints or UI exist for sharing draft links or previewing drafts as other users. This simplifies security and aligns with the spec's "Non-goals: Sharing draft previews with other users."
+- **Publish as Boolean Flip**: Publishing changes `Article.IsDraft` from `true` to `false` (in-place update). This enforces the spec requirement that "Published articles cannot be converted back to drafts" through validation (disallow false→true transitions).
+
+- **No Draft Sharing or Collaboration**: Drafts are strictly private (only accessible to author). Frontend never requests draft articles except through author-filtered queries. This aligns with the spec's "Non-goals: Sharing draft previews with other users."
 
 ### Data Flow Summary
-**Save Draft Flow**: User fills editor form → submits "Save as Draft" → frontend calls `POST /drafts` (create) or `PUT /drafts/:id` (update) → handler validates input → creates/updates Draft entity with `AuthorId = current user` → returns draft data with `DraftId` → frontend shows success message and continues editing.
+**Save Draft Flow**: User fills editor form → submits "Save as Draft" → frontend calls `POST /articles` with `isDraft=true` (create) or `PUT /articles/:slug` with `isDraft=true` (update) → handler validates input → creates/updates Article entity with `IsDraft = true`, `Author = current user`, generates slug from title → returns article data with slug → frontend shows success message and continues editing.
 
-**Publish Draft Flow**: User editing draft → clicks "Publish" → frontend calls `POST /drafts/:id/publish` → handler loads draft → validates ownership → creates new Article entity with slug generated from title → creates ArticleTags for tags → deletes Draft entity → returns published article → frontend redirects to article detail page.
+**Publish Draft Flow**: User editing draft → clicks "Publish" → frontend calls `PUT /articles/:slug/publish` → handler loads article → validates ownership and IsDraft=true → updates `IsDraft = false`, updates `UpdatedAt = DateTime.UtcNow` → returns published article → frontend redirects to article detail page.
 
-**List Drafts Flow**: User navigates to "Drafts" page → frontend calls `GET /drafts` → handler queries drafts filtered by `AuthorId = current user` → orders by `UpdatedAt DESC` → returns list of drafts with metadata → frontend renders list with edit/delete buttons.
+**List Drafts Flow**: User navigates to "Drafts" page → frontend calls `GET /articles/drafts` → handler queries articles filtered by `IsDraft = true AND AuthorId = current user` → orders by `UpdatedAt DESC` → returns list of draft articles → frontend renders list with edit/delete buttons.
 
 ### Critical Patterns & Conventions
 
 **Backend**:
-- MediatR CQRS pattern for all operations (Command/Query + Handler in `Features/Drafts/` folder)
-- FluentValidation for input validation (reuse validation rules similar to Article creation where applicable)
+- MediatR CQRS pattern for all operations (extend existing `Features/Articles/` handlers, add new draft-specific handlers)
+- FluentValidation for input validation (same rules for drafts and published articles)
 - JWT authentication via `[Authorize]` attribute on all draft endpoints
-- Authorization check: Handlers must verify `draft.AuthorId == currentUser.PersonId` before edit/delete/publish operations
-- Unit tests in `backend/tests/Conduit.UnitTests/Features/Drafts/` mirroring feature structure
-- Integration tests in `backend/tests/Conduit.IntegrationTests/Features/Drafts/`
-- EF Core Migration to add `Drafts` table and `DraftTags` join table (applied automatically at startup)
+- Authorization check: Handlers must verify `article.Author.PersonId == currentUser.PersonId` before edit/delete/publish operations on drafts
+- **Critical**: Update ALL existing article query handlers to filter `WHERE IsDraft = false` to prevent draft leakage
+- Unit tests in `backend/tests/Conduit.UnitTests/Features/Articles/` for draft-related handlers
+- Integration tests in `backend/tests/Conduit.IntegrationTests/Features/Articles/`
+- EF Core Migration to add `IsDraft` boolean column to `Articles` table (applied automatically at startup)
 
 **Frontend**:
 - Angular signals for reactive state management (`drafts = signal<Draft[]>([])`)
@@ -79,282 +80,279 @@ graph TD
 
 ### Milestone 1: Backend - Domain & Database
 
-**File: `backend/src/Conduit/Domain/Draft.cs`**
-- Create `Draft` entity class with properties: `DraftId` (int, PK), `Title`, `Description`, `Body`, `AuthorId` (FK to Person), `Author` (navigation), `CreatedAt`, `UpdatedAt`
-- `DraftTags` collection (navigation property for many-to-many with Tag)
-- No `Slug` property (slugs only exist on published articles)
-- JsonIgnore on `DraftId` and `Author` navigation where appropriate
-- NotMapped property `TagList` similar to Article
-
-**File: `backend/src/Conduit/Domain/DraftTag.cs`**
-- Create `DraftTag` join entity with composite key: `DraftId`, `TagId`
-- Navigation properties: `Draft`, `Tag`
-
-**File: `backend/src/Conduit/Infrastructure/ConduitContext.cs`**
-- Add `DbSet<Draft> Drafts` and `DbSet<DraftTag> DraftTags`
-- Configure `DraftTag` many-to-many relationship in `OnModelCreating` (similar to `ArticleTag` configuration)
+**File: `backend/src/Conduit/Domain/Article.cs`**
+- Add `IsDraft` property: `public bool IsDraft { get; set; }` (default to `false` for backward compatibility)
+- Add XML documentation: `/// <summary>Indicates if this article is a draft (true) or published (false). Drafts are private to the author.</summary>`
+- Ensure existing articles without explicit value are treated as published (IsDraft = false)
 
 **File: EF Core Migration**
-- Run `dotnet ef migrations add AddDrafts --project backend/src/Conduit --startup-project backend/src/Conduit`
-- Migration should create `Drafts` table with columns: `DraftId`, `Title`, `Description`, `Body`, `AuthorId`, `CreatedAt`, `UpdatedAt`
-- Create `DraftTags` join table with composite PK (`DraftId`, `TagId`) and FKs to Drafts and Tags tables
+- Run `dotnet ef migrations add AddArticleIsDraft --project backend/src/Conduit --startup-project backend/src/Conduit`
+- Migration should add `IsDraft` column to `Articles` table (type: bit/boolean, NOT NULL, default: 0/false for published)
+- Update all existing articles to have `IsDraft = false` (published) as part of migration
 - Migration applies automatically on app startup (existing behavior)
 
 **Edge Cases:**
-- Ensure `AuthorId` FK has cascade delete behavior (if user deleted, drafts deleted)
-- `Title`, `Description`, `Body` should allow NULL in DB but validation enforces non-null on create
-- `TagList` can be empty array (no tags required)
+- Existing articles default to published (IsDraft = false) for backward compatibility
+- IsDraft column NOT NULL to ensure every article has a defined state
+- Database default value ensures old code paths create published articles
 
 ---
 
-### Milestone 2: Backend - Create/Update Draft
+### Milestone 2: Backend - Update Existing Queries to Filter Published Articles
 
-**File: `backend/src/Conduit/Features/Drafts/CreateOrUpdate.cs`**
-- Define `DraftData` record: `Title`, `Description`, `Body`, `TagList` (similar to `Create.ArticleData`)
-- Define `Command` record: `DraftData Draft`, `int? DraftId` (null for create, populated for update)
-- Validator: `DraftDataValidator` enforces `Title`, `Description`, `Body` are not null/empty (reuse similar validation from `Create.ArticleDataValidator`)
-- Handler: `CreateOrUpdateHandler`
-  - If `DraftId` is null: Create new draft, set `AuthorId = currentUser.PersonId`, set `CreatedAt = UpdatedAt = DateTime.UtcNow`, handle tags (create new tags if needed, reuse existing), return `DraftEnvelope`
-  - If `DraftId` is not null: Load draft, verify `draft.AuthorId == currentUser.PersonId` (throw 403 if not), update fields, handle tag updates (add/remove `DraftTag` entries), set `UpdatedAt = DateTime.UtcNow`, return `DraftEnvelope`
-  - Tag handling: Similar to `Create.Handler` and `Edit.Handler` for articles (find or create tags, manage join table)
+**Critical Step**: Update all existing article queries to explicitly filter for published articles only. This prevents drafts from leaking into public feeds, profiles, and tag lists.
 
-**File: `backend/src/Conduit/Features/Drafts/DraftEnvelope.cs`**
-- Define `DraftEnvelope` record containing `Draft` property
-- Similar structure to `ArticleEnvelope` but for drafts
+**File: `backend/src/Conduit/Features/Articles/List.cs`**
+- Update query to add filter: `WHERE IsDraft = false`
+- Apply to both global feed and user feed queries
 
-**File: `backend/tests/Conduit.UnitTests/Features/Drafts/CreateOrUpdateHandlerTests.cs`**
-- Test: `Should_CreateDraft_WhenValidDataProvided` (verify draft created with correct fields, author assigned, tags associated)
-- Test: `Should_CreateDraft_WithoutTags` (verify empty tag list works)
-- Test: `Should_UpdateDraft_WhenValidDataProvided` (verify existing draft updated, `UpdatedAt` changed)
-- Test: `Should_UpdateOnlyProvidedFields` (verify null fields in update don't overwrite existing data)
-- Test: `Should_ThrowForbidden_WhenUpdatingOtherUsersDraft` (verify authorization)
-- Test: `Should_ThrowNotFound_WhenUpdatingNonExistentDraft`
-- Test: `Should_AddAndRemoveTags_WhenUpdating`
+**File: `backend/src/Conduit/Features/Articles/Details.cs`**
+- Update query to filter: `WHERE IsDraft = false OR (IsDraft = true AND Author.PersonId == currentUser.PersonId)`
+- This allows authors to view their own drafts via slug, but prevents others from accessing
 
-**File: `backend/tests/Conduit.UnitTests/Features/Drafts/CreateOrUpdateValidatorTests.cs`**
-- Test: `Should_HaveError_WhenTitleIsNull`
-- Test: `Should_HaveError_WhenDescriptionIsNull`
-- Test: `Should_HaveError_WhenBodyIsNull`
-- Test: `Should_NotHaveError_WhenTagListIsNull`
+**File: `backend/src/Conduit/Features/Tags/List.cs`**
+- Update tag popularity query to count only articles with `IsDraft = false`
+- Ensure draft articles don't inflate tag popularity counts
+
+**File: `backend/src/Conduit/Features/Profiles/Details.cs` (if separate profile article queries exist)**
+- Update profile's articles query to filter `IsDraft = false` OR `(IsDraft = true AND viewing own profile)`
+
+**File: `backend/tests/Conduit.UnitTests/Features/Articles/ListHandlerTests.cs`**
+- Add test: `Should_ExcludeDraftArticles_FromGlobalFeed`
+- Add test: `Should_ExcludeDraftArticles_FromUserFeed`
+
+**File: `backend/tests/Conduit.UnitTests/Features/Articles/DetailsHandlerTests.cs`**
+- Add test: `Should_AllowAuthor_ToViewOwnDraft`
+- Add test: `Should_PreventOthers_FromViewingDraft`
 
 **Edge Cases:**
-- Concurrent updates to same draft: Last write wins (no optimistic concurrency control per spec)
-- Creating draft with same title as existing published article: Allowed (slug collision handled on publish)
-- Creating draft with same title as another draft: Allowed (treated as separate drafts per spec)
-- Updating deleted draft: Should return 404
+- Authenticated vs unauthenticated access: Unauthenticated users should only see published articles (IsDraft = false)
+- Author viewing own content: Authors can view their own drafts but not others' drafts
+- Tag popularity: Only count published articles (IsDraft = false) to avoid revealing draft topics
 
 ---
 
-### Milestone 3: Backend - List Drafts
+### Milestone 3: Backend - Modify Create Handler to Support Draft Flag
 
-**File: `backend/src/Conduit/Features/Drafts/List.cs`**
-- Define `Query` record: No parameters needed (implicitly filtered by current user)
-- Handler: `ListHandler`
-  - Query `Drafts` filtered by `AuthorId == currentUser.PersonId`
-  - Include `DraftTags` and `Tag` navigation properties (for `TagList`)
-  - Order by `UpdatedAt DESC` (most recently updated first per spec)
-  - Return `DraftsEnvelope` containing list of drafts
+**File: `backend/src/Conduit/Features/Articles/Create.cs`**
+- Add optional `IsDraft` property to `ArticleData`: `public bool? IsDraft { get; init; }` (defaults to `false` if not provided)
+- Update handler to set `article.IsDraft = message.Article.IsDraft ?? false`
+- Generate slug from title immediately (even for drafts) to enable slug-based routing
+- Validation remains the same (Title, Description, Body required for both drafts and published)
 
-**File: `backend/src/Conduit/Features/Drafts/DraftsEnvelope.cs`**
-- Define `DraftsEnvelope` record containing `List<Draft> Drafts` property
+**File: `backend/tests/Conduit.UnitTests/Features/Articles/CreateHandlerTests.cs`**
+- Add test: `Should_CreatePublishedArticle_WhenIsDraftNotProvided`
+- Add test: `Should_CreateDraftArticle_WhenIsDraftIsTrue`
+- Add test: `Should_GenerateSlug_ForDraftArticles`
 
-**File: `backend/tests/Conduit.UnitTests/Features/Drafts/ListHandlerTests.cs`**
-- Test: `Should_ReturnOnlyCurrentUsersDrafts` (create drafts for multiple users, verify only current user's returned)
-- Test: `Should_ReturnDraftsOrderedByUpdatedAtDesc` (create multiple drafts with different timestamps)
+**Edge Cases:**
+- Backward compatibility: If IsDraft not provided, default to false/published (existing API behavior preserved)
+- Slug generation for drafts: Slugs must be unique even for drafts (could have draft "my-title" and published "my-title")
+- Draft articles should have all validations enforced (same as published)
+
+---
+
+### Milestone 4: Backend - Modify Edit Handler to Preserve Draft Flag
+
+**File: `backend/src/Conduit/Features/Articles/Edit.cs`**
+- Add authorization check: If article.IsDraft == true, verify `article.Author.PersonId == currentUser.PersonId` (throw 403 if not author)
+- Published articles can only be edited by author (existing behavior)
+- Draft articles can only be edited by author (new behavior)
+- Editing should preserve the IsDraft field unless explicitly changed
+- Add optional `IsDraft` to `ArticleData` if transitions are needed during edit (likely not for this milestone)
+
+**File: `backend/tests/Conduit.UnitTests/Features/Articles/EditHandlerTests.cs`**
+- Add test: `Should_PreserveIsDraft_WhenEditingDraft`
+- Add test: `Should_PreserveIsDraft_WhenEditingPublished`
+- Add test: `Should_ThrowForbidden_WhenNonAuthorEditsPublished`
+- Add test: `Should_ThrowForbidden_WhenNonAuthorEditsDraft`
+
+**Edge Cases:**
+- Editing published article: Existing authorization checks apply
+- Editing draft article: Must verify author ownership (prevent unauthorized edits)
+- IsDraft transitions during edit: Not allowed in this milestone (use separate Publish endpoint)
+
+---
+
+### Milestone 5: Backend - List Drafts Query
+
+**File: `backend/src/Conduit/Features/Articles/ListDrafts.cs`**
+- Create new `ListDrafts` query handler (separate from List.cs to keep concerns distinct)
+- Query: `WHERE IsDraft = true AND Author.PersonId == currentUser.PersonId`
+- Include `Author`, `ArticleTags`, and `Tags` navigation properties
+- Order by `UpdatedAt DESC` (most recently updated first)
+- Return `ArticlesEnvelope` (reuse existing envelope, just filtered articles)
+
+**File: `backend/tests/Conduit.UnitTests/Features/Articles/ListDraftsHandlerTests.cs`**
+- Test: `Should_ReturnOnlyCurrentUsersDrafts`
+- Test: `Should_ExcludePublishedArticles_FromDraftList`
+- Test: `Should_ExcludeOtherUsersDrafts`
+- Test: `Should_ReturnDraftsOrderedByUpdatedAtDesc`
 - Test: `Should_ReturnEmptyList_WhenNoDrafts`
-- Test: `Should_IncludeTags_InDraftList`
 
 **Edge Cases:**
-- User has no drafts: Return empty list (not an error)
-- Drafts from deleted users should not appear (handled by FK cascade delete)
+- User has no drafts: Return empty list
+- User has both drafts and published articles: Only return drafts
+- Unauthenticated request: Should be blocked by authorization (401)
 
 ---
 
-### Milestone 4: Backend - Delete Draft
+### Milestone 6: Backend - Publish Draft Handler
 
-**File: `backend/src/Conduit/Features/Drafts/Delete.cs`**
-- Define `Command` record: `int DraftId`
-- Handler: `DeleteHandler`
-  - Load draft by `DraftId` including `DraftTags` navigation
-  - Verify `draft.AuthorId == currentUser.PersonId` (throw 403 if not)
-  - Delete all associated `DraftTags` (cascade or explicit removal)
-  - Delete `Draft` entity
-  - Return success (void or empty response)
-
-**File: `backend/tests/Conduit.UnitTests/Features/Drafts/DeleteHandlerTests.cs`**
-- Test: `Should_DeleteDraft_WhenAuthorized`
-- Test: `Should_DeleteAssociatedTags_WhenDeletingDraft`
-- Test: `Should_ThrowForbidden_WhenDeletingOtherUsersDraft`
-- Test: `Should_ThrowNotFound_WhenDraftDoesNotExist`
-
-**Edge Cases:**
-- Deleting draft while editing in another tab: Next save in other tab should return 404
-- Deleting non-existent draft: Return 404
-- Attempting to delete another user's draft: Return 403
-
----
-
-### Milestone 5: Backend - Publish Draft
-
-**File: `backend/src/Conduit/Features/Drafts/Publish.cs`**
-- Define `Command` record: `int DraftId`
-- Handler: `PublishHandler`
-  - Load draft by `DraftId` including `Author` and `DraftTags`
-  - Verify `draft.AuthorId == currentUser.PersonId` (throw 403 if not)
-  - Generate slug from `draft.Title` using `GenerateSlug()` extension
-  - Create new `Article` entity with:
-    - Title, Description, Body copied from draft
-    - Slug generated from title
-    - Author = draft.Author
-    - CreatedAt, UpdatedAt = DateTime.UtcNow
-  - Create `ArticleTag` entries for each `DraftTag` (copy tags to published article)
-  - Delete all `DraftTags`
-  - Delete `Draft` entity
+**File: `backend/src/Conduit/Features/Articles/Publish.cs`**
+- Create `Command` record: `string Slug` (identify article by slug)
+- Create `PublishHandler`:
+  - Load article by slug including Author navigation
+  - Verify `article.IsDraft == true` (throw 400 if already published)
+  - Verify `article.Author.PersonId == currentUser.PersonId` (throw 403 if not author)
+  - Update `article.IsDraft = false`
+  - Update `article.UpdatedAt = DateTime.UtcNow`
   - Save changes
   - Return `ArticleEnvelope` with published article
 
-**File: `backend/tests/Conduit.UnitTests/Features/Drafts/PublishHandlerTests.cs`**
-- Test: `Should_PublishDraft_AndCreateArticle`
-- Test: `Should_GenerateSlug_FromDraftTitle`
-- Test: `Should_CopyTags_FromDraftToArticle`
-- Test: `Should_DeleteDraft_AfterPublishing`
-- Test: `Should_ThrowForbidden_WhenPublishingOtherUsersDraft`
-- Test: `Should_ThrowNotFound_WhenDraftDoesNotExist`
-- Test: `Should_SetCreatedAtAndUpdatedAt_ToCurrentTime` (publishing is treated as new article creation)
+**File: `backend/tests/Conduit.UnitTests/Features/Articles/PublishHandlerTests.cs`**
+- Test: `Should_PublishDraft_WhenAuthorized`
+- Test: `Should_SetIsDraftToFalse_WhenPublishing`
+- Test: `Should_UpdateUpdatedAt_WhenPublishing`
+- Test: `Should_ThrowBadRequest_WhenArticleAlreadyPublished`
+- Test: `Should_ThrowForbidden_WhenNonAuthorPublishes`
+- Test: `Should_ThrowNotFound_WhenArticleDoesNotExist`
 
 **Edge Cases:**
-- Publishing draft with title matching existing article slug: Slug generation should handle uniqueness (implementation may append numbers, e.g., "my-title-1", "my-title-2")
-- Publishing in one tab while editing in another: Publish succeeds, edit tab shows 404 on next save
-- Network error during publish transaction: Rollback ensures draft not deleted if article creation fails
+- Publishing already-published article: Return 400 Bad Request
+- Publishing non-existent article: Return 404
+- Publishing another user's draft: Return 403 Forbidden
+- Concurrent publish attempts: Last write wins (acceptable per spec)
 
 ---
 
-### Milestone 6: Backend - Controller & Routes
+### Milestone 7: Backend - Controller Routes
 
-**File: `backend/src/Conduit/Features/Drafts/DraftsController.cs`**
-- Create `DraftsController` inheriting from `Controller`
-- Add `[ApiController]`, `[Route("drafts")]`, `[Authorize]` attributes
-- Endpoints:
-  - `GET /drafts` → `List.Query` (returns `DraftsEnvelope`)
-  - `POST /drafts` → `CreateOrUpdate.Command` with `DraftId = null` (returns `DraftEnvelope`)
-  - `PUT /drafts/{id}` → `CreateOrUpdate.Command` with `DraftId = id` (returns `DraftEnvelope`)
-  - `DELETE /drafts/{id}` → `Delete.Command` (returns 204 No Content)
-  - `POST /drafts/{id}/publish` → `Publish.Command` (returns `ArticleEnvelope`)
-- All endpoints require authentication (enforced by controller-level `[Authorize]`)
+**File: `backend/src/Conduit/Features/Articles/ArticlesController.cs`**
+- Add endpoint: `GET /articles/drafts` → `ListDrafts.Query` (returns `ArticlesEnvelope` with drafts)
+- Add endpoint: `PUT /articles/{slug}/publish` → `Publish.Command` (returns `ArticleEnvelope`)
+- Existing endpoints work with modifications:
+  - `POST /articles` with `isDraft=true` in body creates draft (Create.Command handles this)
+  - `PUT /articles/{slug}` edits draft or published article (Edit.Command with authorization checks)
+  - `DELETE /articles/{slug}` deletes draft or published article (Delete.Command with authorization checks)
+- All endpoints remain under `[Authorize]` as appropriate
 
-**File: `backend/tests/Conduit.IntegrationTests/Features/Drafts/DraftsIntegrationTests.cs`**
-- Test: `CreateDraft_ShouldReturnCreatedDraft`
-- Test: `UpdateDraft_ShouldReturnUpdatedDraft`
+**File: `backend/tests/Conduit.IntegrationTests/Features/Articles/ArticleDraftsIntegrationTests.cs`**
+- Test: `CreateDraft_ShouldReturnDraftArticle`
 - Test: `ListDrafts_ShouldReturnOnlyUserDrafts`
-- Test: `DeleteDraft_ShouldRemoveDraft`
-- Test: `PublishDraft_ShouldCreateArticleAndRemoveDraft`
-- Test: `UnauthenticatedRequest_ShouldReturn401`
+- Test: `PublishDraft_ShouldSetIsDraftToFalse`
+- Test: `EditDraft_ShouldPreserveIsDraft`
+- Test: `DeleteDraft_ShouldRemoveArticle`
+- Test: `PublishedArticles_ShouldNotAppearInDraftsList`
 
 **Edge Cases:**
-- All draft endpoints require authentication (return 401 if not authenticated)
-- Authorization enforced in handlers (return 403 if accessing other user's draft)
+- Unauthenticated requests to draft endpoints: Return 401
+- Creating article without isDraft: Defaults to false/published (backward compatibility)
+- Filtering feeds must exclude drafts (already handled in Milestone 2)
 
 ---
 
-### Milestone 7: Frontend - Draft Model & Service
+### Milestone 8: Frontend - Draft Model & Service
 
-**File: `frontend/src/app/features/article/models/draft.model.ts`**
-- Define `Draft` interface: `draftId`, `title`, `description`, `body`, `tagList`, `createdAt`, `updatedAt`
-- Similar structure to `Article` but without `slug`, `author`, `favorited`, `favoritesCount`
+**File: `frontend/src/app/features/article/models/article.model.ts`**
+- Update `Article` interface to include optional `isDraft?: boolean` field
+- Existing Article interface works for both drafts and published articles
 
 **File: `frontend/src/app/features/article/services/articles.service.ts`**
-- Add methods:
-  - `listDrafts(): Observable<{ drafts: Draft[] }>` → `GET /drafts`
-  - `getDraft(id: number): Observable<Draft>` → `GET /drafts/:id` (if needed, or load from list)
-  - `saveDraft(draft: Partial<Draft>): Observable<Draft>` → `POST /drafts` (create) or `PUT /drafts/:id` (update)
-  - `deleteDraft(id: number): Observable<void>` → `DELETE /drafts/:id`
-  - `publishDraft(id: number): Observable<Article>` → `POST /drafts/:id/publish`
-- Methods should map response envelopes to direct objects (e.g., `map(data => data.drafts)`)
+- Add method: `listDrafts(): Observable<{ articles: Article[]; articlesCount: number }>` → `GET /articles/drafts`
+- Add method: `publishArticle(slug: string): Observable<Article>` → `PUT /articles/:slug/publish`
+- Modify `create()` method signature to accept optional `isDraft?: boolean` parameter (defaults to false for backward compatibility)
+- Methods map response envelopes to direct objects (e.g., `map(data => data.articles)`)
 
 **File: `frontend/src/app/features/article/services/articles.service.spec.ts`**
-- Add tests for each new draft method (mock HttpClient, verify correct endpoints called, verify response mapping)
+- Add test for `listDrafts()`: Mock HttpClient, verify `GET /articles/drafts` called, verify response mapping
+- Add test for `publishArticle(slug)`: Mock HttpClient, verify `PUT /articles/:slug/publish` called
+- Add test for `create()` with isDraft=true: Verify isDraft included in request body
 
 **Edge Cases:**
-- Service methods should not handle authorization errors (let HTTP interceptor handle 401/403 and redirect)
-- Empty drafts list should return `{ drafts: [] }`, not null
+- Creating article without isDraft defaults to false/published (backward compatibility)
+- List drafts returns empty array if no drafts (not null)
+- Service should not handle 401/403 errors (HTTP interceptor handles these)
 
 ---
 
-### Milestone 8: Frontend - Drafts List Page
+### Milestone 9: Frontend - Drafts List Page
 
 **File: `frontend/src/app/features/article/pages/drafts/drafts.component.ts`**
 - Standalone component with `requireAuth` guard
 - Inject `ArticlesService`, `Router`
-- On init: Call `articlesService.listDrafts()`, populate `drafts` signal
+- On init: Call `articlesService.listDrafts()`, populate `drafts` signal (signal of Article[])
 - Display loading state while fetching
 - Display empty state if `drafts().length === 0`: "No drafts yet. Start writing!" with link to `/editor`
 - Display list of drafts: For each draft, show title, description, updatedAt timestamp, tags, "Edit" button, "Delete" button
-- Edit button: Navigate to `/editor/draft/:draftId`
-- Delete button: Call `articlesService.deleteDraft(id)`, remove from list on success, show error on failure
+- Edit button: Navigate to `/editor/:slug` (drafts now have slugs)
+- Delete button: Call `articlesService.delete(slug)`, remove from list on success, show error on failure
 
 **File: `frontend/src/app/features/article/pages/drafts/drafts.component.html`**
 - Template structure:
   - Container with page title "Your Drafts"
   - Loading state: Spinner or "Loading drafts..."
   - Empty state: Message + link to create new article
-  - Draft list: Each draft as a card/row with title (as link to edit), description, tags, timestamp, edit/delete buttons
+  - Draft list: Each draft as a card/row with title (as link to edit), description, tags, timestamp (formatted updatedAt), edit/delete buttons
 
 **File: `frontend/src/app/features/article/pages/drafts/drafts.component.spec.ts`**
 - Test: Should load and display drafts
 - Test: Should show empty state when no drafts
 - Test: Should navigate to editor when clicking edit
 - Test: Should delete draft and update list
+- Test: Should display article properties (title, description, tags)
 
 **File: `frontend/src/app/app.routes.ts`**
 - Add route: `{ path: 'drafts', loadComponent: () => import('./features/article/pages/drafts/drafts.component'), canActivate: [requireAuth] }`
 
 **Edge Cases:**
-- Deleting draft should remove it from UI immediately (optimistic update)
-- If delete fails, show error and restore draft to list
-- Clicking draft title or edit button should navigate to draft editor
+- Deleting draft should use existing `articlesService.delete(slug)` method (works for both drafts and published)
+- Optimistic UI update: Remove draft from list immediately, restore on error
+- Clicking draft title navigates to editor (not article detail page, since drafts shouldn't be viewable)
 
 ---
 
-### Milestone 9: Frontend - Update Editor for Drafts
+### Milestone 10: Frontend - Update Editor for Drafts
 
 **File: `frontend/src/app/features/article/pages/editor/editor.component.ts`**
-- Modify routing logic: Check for route param `draftId` in addition to `slug`
-  - If `draftId` exists: Load draft via `articlesService.getDraft(draftId)` (or pass draft from drafts list), populate form, store `draftId` in component
-  - If `slug` exists: Load article (existing behavior)
-  - If neither: New article/draft
-- Add "Save as Draft" button alongside "Publish Article" button
-- Add `currentDraftId` signal to track whether editing a draft
-- Modify `submitForm()`:
-  - If user clicked "Save as Draft": Call `articlesService.saveDraft({ draftId: currentDraftId(), ...formData })`, show success message, update `currentDraftId` if new draft created, stay on editor page
-  - If user clicked "Publish" and `currentDraftId()` exists: Call `articlesService.publishDraft(currentDraftId())`, navigate to article detail page
-  - If user clicked "Publish" and no `currentDraftId()`: Call `articlesService.create()` (existing behavior)
-- Add success message signal for "Draft saved successfully" (not just error messages)
+- Modify routing logic: Check for route param `slug`
+  - If `slug` exists: Load article via `articlesService.get(slug)`, check if `isDraft === true`
+  - Store `isDraft` signal to track whether editing draft vs published article
+  - If neither: New article
+- Add "Save as Draft" button (visible only when creating new article or editing draft)
+- Add `isDraft` signal to track editing mode
+- Create two submit methods:
+  - `saveDraft()`: Call `articlesService.create({ ...formData, isDraft: true })` if new, or `articlesService.update({ ...formData, isDraft: true, slug })` if existing draft. Show success message, stay on editor. Update URL to `/editor/:slug` after first save if slug received.
+  - `publishArticle()`: If `isDraft()`, call `articlesService.publishArticle(slug)`. If new article, call `articlesService.create({ ...formData, isDraft: false })`. Navigate to article detail on success.
+- Add `successMessage` signal for "Draft saved successfully" notification
 
 **File: `frontend/src/app/features/article/pages/editor/editor.component.html`**
-- Add "Save as Draft" button: `<button class="btn btn-default" (click)="saveDraft()">Save as Draft</button>`
-- Keep existing "Publish Article" button: `<button class="btn btn-primary" (click)="submitForm()">Publish Article</button>` (or rename to `publishArticle()`)
-- Show success message below errors: `@if (successMessage()) { <div class="success">{{ successMessage() }}</div> }`
+- Add "Save as Draft" button (show only when creating new or editing draft): Button with click handler `saveDraft()`
+- Keep existing "Publish Article" button with updated logic
+- Show success message: Display success notification when draft saved
 
 **File: `frontend/src/app/features/article/pages/editor/editor.component.spec.ts`**
-- Test: Should save draft when "Save as Draft" clicked
-- Test: Should publish draft when "Publish" clicked on draft editor
-- Test: Should create article when "Publish" clicked on new article editor
-- Test: Should load draft data when draftId in route
+- Test: Should save draft when "Save as Draft" clicked on new article
+- Test: Should publish draft when "Publish" clicked while editing draft
+- Test: Should create published article when "Publish" clicked on new article
+- Test: Should load draft data when slug in route and isDraft is true
 - Test: Should update existing draft when saving again
+- Test: Should hide "Save as Draft" button when editing published article
 
 **File: `frontend/src/app/app.routes.ts`**
-- Add route: `{ path: 'editor/draft/:draftId', loadComponent: () => import('./features/article/pages/editor/editor.component'), canActivate: [requireAuth] }`
-- Keep existing routes: `editor` (new), `editor/:slug` (edit article)
+- Keep existing routes: `editor` (new article), `editor/:slug` (edit article or draft)
+- No new route needed since drafts use slugs now
 
 **Edge Cases:**
-- User clicks "Save as Draft" on published article editor (editing existing article by slug): Should not allow saving as draft (only "Publish Article" button should work). Alternatively, clarify in UI that "Save as Draft" only appears when creating new content or editing draft.
-- User navigates away after clicking "Save as Draft": Changes are saved (no warning needed per spec)
-- User navigates away without saving: Changes lost (consistent with existing behavior, no warning)
-- After saving draft, update route to `/editor/draft/:draftId` so refresh doesn't lose context
+- Editing published article: "Save as Draft" button should NOT appear (only "Publish Article")
+- Creating new article: Both "Save as Draft" and "Publish Article" buttons visible
+- Editing draft: Both buttons visible, "Publish Article" calls publish endpoint
+- After saving draft first time, update URL from `/editor` to `/editor/:slug` so refresh works correctly
+- User navigates away without saving: Changes lost (existing behavior, no warning per spec)
 
 ---
 
-### Milestone 10: Frontend - Add Drafts Link to Navigation
+### Milestone 11: Frontend - Add Drafts Link to Navigation
 
 **File: `frontend/src/app/core/layout/header.component.html`**
 - In authenticated user nav section, add "Drafts" link between "New Article" and "Settings" with icon (e.g., `ion-document`) and text "Drafts"
@@ -365,9 +363,11 @@ graph TD
 **File: `frontend/src/app/core/layout/header.component.spec.ts`**
 - Test: Should show Drafts link when authenticated
 - Test: Should not show Drafts link when unauthenticated
+- Test: Should highlight Drafts link when on drafts page
 
 **Edge Cases:**
-- Drafts link should highlight (active state) when on `/drafts` page or editing draft (`/editor/draft/:id`)
+- Drafts link should highlight when on `/drafts` page
+- Link should not highlight when editing draft at `/editor/:slug` (unless specific routerLinkActive configuration added)
 
 ---
 
@@ -376,43 +376,51 @@ graph TD
 ### Edge Cases & Pitfalls
 
 **Authentication/Authorization**:
-- All draft endpoints require authentication (401 if not logged in)
-- All draft operations (edit, delete, publish) must verify `draft.AuthorId == currentUser.PersonId` (403 if not owner)
-- Frontend should never receive other users' drafts from list endpoint (backend filters by author)
-- Unauthenticated users should be redirected to login if attempting to access `/drafts` or `/editor/draft/:id` (handled by `requireAuth` guard)
+- All draft operations (list, edit, publish) require authentication (401 if not logged in)
+- Draft articles can only be edited/published by their author: Verify `article.Author.PersonId == currentUser.PersonId` (403 if not owner)
+- Frontend should never request draft articles outside of the `/articles/drafts` endpoint
+- Unauthenticated users should be redirected to login if attempting to access `/drafts` (handled by `requireAuth` guard)
 
 **Data Integrity**:
-- Publishing a draft must be atomic: Create article + create article tags + delete draft tags + delete draft in a single transaction. If any step fails, rollback entire operation to avoid orphaned drafts or partially published articles.
-- Deleting a user should cascade delete all their drafts (enforce FK cascade delete on `Drafts.AuthorId`)
-- Tags should be reused across drafts and articles (don't create duplicate tags with same name)
-- Slug generation on publish must handle potential collisions with existing articles (e.g., "my-title" exists, generate "my-title-1")
+- Publishing a draft must be atomic: Update status field in single transaction. Use EF Core transaction handling to ensure consistency.
+- Deleting a user should cascade delete all their articles (both drafts and published via existing FK constraint)
+- Tags are shared across drafts and published articles (don't create duplicate tags)
+- Slug uniqueness enforced by database constraint (existing behavior, applies to drafts too since they have slugs)
 
 **Concurrency**:
-- Editing draft in multiple tabs: Last write wins (no optimistic locking). If draft deleted in tab A, saving in tab B returns 404.
-- Publishing draft while editing: Publish succeeds, editor shows 404 on next save attempt.
-- Creating multiple drafts with same title: Allowed (they're separate entities until published)
+- Editing article in multiple tabs: Last write wins (no optimistic locking per spec). Status preserved unless explicitly changed.
+- Publishing draft while editing in another tab: Publish succeeds, editor continues working (may accidentally update published article if they save after)
+- Creating multiple drafts with same title: Each gets unique slug via slug generation logic
 
-**Query Isolation**:
-- Ensure existing article queries never accidentally include drafts:
-  - Feeds (`GET /articles`, `GET /articles/feed`) query only `Articles` table, not `Drafts`
-  - Tag popularity (`GET /tags`) should count only `ArticleTags`, not `DraftTags`
-  - Profile articles (`GET /articles?author=...`) query only `Articles` table
-  - Favorites (`GET /articles?favorited=...`) query only `Articles` table (drafts can't be favorited)
-- No shared queries between `Drafts` and `Articles` tables (they're completely separate until publish)
+**Query Isolation (CRITICAL)**:
+- **ALL existing article queries MUST add IsDraft filter**: This is the most error-prone aspect of this approach
+  - List/Feed handlers: `WHERE IsDraft = false`
+  - Details handler: `WHERE IsDraft = false OR (IsDraft = true AND Author.PersonId = currentUser)`
+  - Tag popularity: Count only `WHERE IsDraft = false`
+  - Profile articles: `WHERE IsDraft = false` (or allow author to see own drafts)
+- Missing just ONE filter will leak drafts to public feeds - review all Article queries carefully
+- Use helper methods or query extensions to standardize filtering: Consider `Articles.WherePublished()` extension method
 
 **Validation Consistency**:
-- Draft validation (title, description, body required) should match article validation to avoid surprises when publishing
-- However, drafts should allow saving with validation errors in the future if auto-save is added (but current spec says auto-save is out of scope, so enforce same validation as articles)
+- Draft and published articles use identical validation (Title, Description, Body required)
+- This prevents surprises when publishing (no additional validation failures)
+- IsDraft transitions: Only allow true→false (draft to published), not false→true (enforce in Publish handler validation)
+
+**Backward Compatibility**:
+- Existing API endpoints continue to work: Creating article without isDraft defaults to false (published)
+- Existing articles have `IsDraft = false` (published) set by migration
+- Existing queries don't break, but MUST be updated to filter by IsDraft (this is a breaking change in behavior if not handled)
 
 ### Performance Considerations
-- Drafts list query should only load drafts for current user (don't load all drafts and filter client-side)
-- Drafts list can be paginated in future if users have many drafts (but spec doesn't require pagination, so implement simple unpaginated list)
-- Publishing should execute in a transaction to avoid partial state on errors
+- Add database index on `Articles.IsDraft` column to optimize filtering queries (especially for feeds and lists)
+- Draft list query filtered by both `IsDraft` and `AuthorId`: Consider composite index `(IsDraft, AuthorId)` or `(AuthorId, IsDraft)`
+- Tag popularity query now needs IsDraft filter: Ensure index supports `WHERE IsDraft = false` efficiently
 
 ### Security Considerations
-- Drafts are completely private; ensure no API endpoint exposes other users' drafts (even by accident through search, tags, or feeds)
-- Draft IDs should not be guessable (use auto-increment integers, rely on authorization checks in handlers)
-- When publishing, verify slug uniqueness to avoid overwriting existing articles (though DB should enforce unique slug constraint)
+- Drafts are private; ensure ALL public queries filter by IsDraft to prevent leakage
+- IsDraft field is user-controlled input (via API): Validate allowed transitions (true→false OK, false→true blocked)
+- Authorization checks must verify author ownership for draft operations (edit, publish, delete)
+- Slug-based routing for drafts means slugs are potentially guessable: Rely on authorization checks, ensure 403 returned for non-owners
 
 ---
 
@@ -435,16 +443,18 @@ After all automated tests pass, **ask the user to manually test** the workflows 
 ## 5. Dependencies & References
 
 ### Depends On
-- Existing article creation/editing infrastructure (`Features/Articles/Create.cs`, `Edit.cs`)
+- Existing article creation/editing infrastructure (`Features/Articles/Create.cs`, `Edit.cs`, `Delete.cs`)
 - Existing authentication/authorization system (`ICurrentUserAccessor`, JWT)
-- Existing tag management (reuse `Tag` entity for draft tags)
+- Existing tag management (reuse `Tag` and `ArticleTag` entities for draft tags)
 - Existing editor component UI (modify to add "Save as Draft" button)
+- Existing Article entity and ArticlesController
 
 ### Depended On By
-- Future auto-save feature (out of scope for this spec, but could build on this foundation)
-- Future scheduled publishing (out of scope, would extend publish handler)
+- Future auto-save feature (out of scope for this spec, but could build on status field foundation)
+- Future scheduled publishing (out of scope, would work with Draft status articles)
+- Future "unpublish" feature (could add Published→Draft transition, currently blocked)
 
 ### Related Documentation
 - Feature spec: `.github/specs/article-drafts/spec.md`
-- Related features: Article creation (`.github/specs/articles/spec.md`), Article editing
+- Related features: Article creation, Article editing, Article listing/filtering
 

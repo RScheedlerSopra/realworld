@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -41,6 +43,18 @@ public class ErrorHandlingMiddleware(
                 result = JsonSerializer.Serialize(new { errors = re.Errors });
                 // Log RestException with full stack trace
                 logger.LogError(exception, "REST Exception occurred: {Message}", re.Errors);
+                break;
+            case ValidationException ve:
+                context.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
+                var errors = ve.Errors
+                    .GroupBy(x => x.PropertyName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => string.Join(", ", g.Select(x => x.ErrorMessage))
+                    );
+                result = JsonSerializer.Serialize(new { errors });
+                // Log validation exception
+                logger.LogWarning("Validation Exception: {Errors}", JsonSerializer.Serialize(errors));
                 break;
             default:
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;

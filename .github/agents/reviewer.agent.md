@@ -1,5 +1,5 @@
 ---
-name: developer
+name: reviewer
 description: Reviews the implementation of a feature
 handoffs:
   - label: Apply Suggestions

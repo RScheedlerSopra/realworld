@@ -1,0 +1,689 @@
+[
+  {
+    "name": "Save new article as draft with all fields",
+    "description": "User creates a new draft with title, description, body, and tags",
+    "steps": [
+      "Authenticate as user",
+      "Navigate to New Article page",
+      "Fill in title, description, body, and tags",
+      "Click 'Save as Draft' button",
+      "Verify success message appears",
+      "Verify draft appears in drafts list with correct data",
+      "Verify createdAt and updatedAt timestamps are set"
+    ]
+  },
+  {
+    "name": "Save new draft with only required fields",
+    "description": "User creates draft with title, description, body only (no tags)",
+    "steps": [
+      "Authenticate as user",
+      "Navigate to New Article page",
+      "Fill in only title, description, and body",
+      "Click 'Save as Draft' button",
+      "Verify draft is saved successfully with empty tags array"
+    ]
+  },
+  {
+    "name": "Edit existing draft and save changes",
+    "description": "User loads an existing draft, modifies it, and saves",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Navigate to Drafts page",
+      "Click 'Edit' on a draft",
+      "Modify title, description, or body",
+      "Click 'Save as Draft' button",
+      "Verify updatedAt timestamp is updated",
+      "Verify createdAt remains unchanged",
+      "Verify changes are persisted"
+    ]
+  },
+  {
+    "name": "Publish draft successfully",
+    "description": "User publishes a complete draft as a live article",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Navigate to Drafts page and edit a draft",
+      "Click 'Publish' button",
+      "Verify slug is generated from title",
+      "Verify redirect to published article detail page",
+      "Verify draft is removed from drafts list",
+      "Verify article appears in global feed"
+    ]
+  },
+  {
+    "name": "Delete draft permanently",
+    "description": "User deletes a draft with no confirmation",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Navigate to Drafts page",
+      "Click 'Delete' on a draft",
+      "Verify draft is immediately removed from list",
+      "Verify draft cannot be recovered"
+    ]
+  },
+  {
+    "name": "View drafts list sorted by updatedAt",
+    "description": "User views all their drafts in chronological order",
+    "steps": [
+      "Authenticate as user with multiple drafts",
+      "Navigate to Drafts page",
+      "Verify drafts are sorted by updatedAt descending",
+      "Edit the oldest draft",
+      "Verify it moves to top of list after saving"
+    ]
+  },
+  {
+    "name": "Empty drafts list shows empty state",
+    "description": "User with no drafts sees empty state message",
+    "steps": [
+      "Authenticate as user with no drafts",
+      "Navigate to Drafts page",
+      "Verify empty state message: 'No drafts yet. Start writing!'"
+    ]
+  },
+  {
+    "name": "Save draft with same title as existing draft",
+    "description": "Multiple drafts can have identical titles",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with title 'Test Article'",
+      "Create another draft with title 'Test Article'",
+      "Verify both drafts exist separately",
+      "Verify both are listed in drafts page"
+    ]
+  },
+  {
+    "name": "Save draft with same title as published article",
+    "description": "Draft title can match published article title",
+    "steps": [
+      "Authenticate as user",
+      "Publish an article with title 'My Article'",
+      "Create a draft with title 'My Article'",
+      "Verify draft is saved successfully",
+      "Verify no slug collision occurs (draft has no slug yet)"
+    ]
+  },
+  {
+    "name": "Publish draft when slug would collide with published article",
+    "description": "System handles slug collision on publish",
+    "steps": [
+      "Authenticate as user",
+      "Publish article with title 'Test Article' (slug: test-article)",
+      "Create draft with title 'Test Article'",
+      "Attempt to publish draft",
+      "Verify system generates unique slug (e.g., test-article-2)",
+      "Verify both articles exist with different slugs"
+    ]
+  },
+  {
+    "name": "Navigate away from editor without saving",
+    "description": "Unsaved changes are lost with no warning",
+    "steps": [
+      "Authenticate as user",
+      "Navigate to New Article page",
+      "Fill in title, description, body",
+      "Navigate to Home page without saving",
+      "Verify no warning dialog appears",
+      "Navigate to Drafts page",
+      "Verify no draft was created"
+    ]
+  },
+  {
+    "name": "Edit draft and navigate away without saving changes",
+    "description": "Unsaved edits to existing draft are lost",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Edit the draft and modify title",
+      "Navigate away without saving",
+      "Return to Drafts page and edit same draft",
+      "Verify title is unchanged (edit was lost)"
+    ]
+  },
+  {
+    "name": "Save draft with maximum length title",
+    "description": "Test upper boundary of title field validation",
+    "steps": [
+      "Authenticate as user",
+      "Navigate to New Article page",
+      "Enter title at maximum allowed length",
+      "Fill description and body",
+      "Save as draft",
+      "Verify draft is saved successfully"
+    ]
+  },
+  {
+    "name": "Save draft with title containing special characters",
+    "description": "Special characters in title are handled correctly",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with title containing: !@#$%^&*()[]{}",
+      "Save as draft",
+      "Verify draft is saved",
+      "Publish draft",
+      "Verify slug is generated correctly (special chars handled)"
+    ]
+  },
+  {
+    "name": "Save draft with very long body content",
+    "description": "Test handling of large markdown content",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with body containing 50,000 characters",
+      "Save as draft",
+      "Verify save operation completes",
+      "Reload draft and verify content integrity"
+    ]
+  },
+  {
+    "name": "Save draft with many tags",
+    "description": "Test draft with large number of tags",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with 50 tags",
+      "Save as draft",
+      "Verify all tags are saved",
+      "Publish draft",
+      "Verify all tags appear on published article"
+    ]
+  },
+  {
+    "name": "Save draft with duplicate tags",
+    "description": "Test system handling of duplicate tag entries",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with tags: 'test, javascript, test, javascript'",
+      "Save as draft",
+      "Verify tag handling (deduplicated or preserved)"
+    ]
+  },
+  {
+    "name": "Add, remove, and re-add tag while editing draft",
+    "description": "Test tag modification workflow",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with tag 'angular'",
+      "Save as draft",
+      "Edit draft and remove 'angular' tag",
+      "Save as draft",
+      "Edit draft and add 'angular' tag back",
+      "Save as draft",
+      "Verify final tag state is correct"
+    ]
+  },
+  {
+    "name": "Create many drafts (no limit test)",
+    "description": "Verify no artificial limit on number of drafts",
+    "steps": [
+      "Authenticate as user",
+      "Create 100 drafts",
+      "Verify all 100 drafts appear in drafts list",
+      "Verify list performance is acceptable"
+    ]
+  },
+  {
+    "name": "Save draft repeatedly without modifications",
+    "description": "Test idempotency of save operation",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Edit draft",
+      "Click 'Save as Draft' 5 times rapidly",
+      "Verify only one draft exists",
+      "Verify updatedAt timestamp reflects last save"
+    ]
+  },
+  {
+    "name": "Network failure during draft save",
+    "description": "User sees error when save fails due to network",
+    "steps": [
+      "Authenticate as user",
+      "Create draft",
+      "Simulate network failure",
+      "Click 'Save as Draft'",
+      "Verify error message: 'Failed to save draft. Please try again.'",
+      "Verify save button remains enabled for retry"
+    ]
+  },
+  {
+    "name": "Network failure during draft publish",
+    "description": "User sees error when publish fails",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Edit draft",
+      "Simulate network failure",
+      "Click 'Publish'",
+      "Verify error message: 'Failed to publish article. Please try again.'",
+      "Verify publish button remains enabled for retry"
+    ]
+  },
+  {
+    "name": "Network failure loading drafts list",
+    "description": "Graceful error handling when drafts cannot load",
+    "steps": [
+      "Authenticate as user",
+      "Simulate network failure",
+      "Navigate to Drafts page",
+      "Verify error message: 'Unable to load drafts. Please refresh the page.'"
+    ]
+  },
+  {
+    "name": "Server error (500) during draft save",
+    "description": "Test handling of server-side errors",
+    "steps": [
+      "Authenticate as user",
+      "Create draft",
+      "Simulate 500 server error",
+      "Click 'Save as Draft'",
+      "Verify appropriate error message is displayed"
+    ]
+  },
+  {
+    "name": "Validation error on publish",
+    "description": "Publish fails if draft doesn't meet published article requirements",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with empty title",
+      "Attempt to publish",
+      "Verify validation error message for required title field"
+    ]
+  },
+  {
+    "name": "Delete draft while editing in another tab",
+    "description": "Concurrent operation conflict handling",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Open draft in Tab 1 for editing",
+      "Open Drafts page in Tab 2",
+      "Delete draft in Tab 2",
+      "Return to Tab 1 and attempt to save",
+      "Verify error message indicating draft no longer exists"
+    ]
+  },
+  {
+    "name": "Publish draft in one tab while editing in another",
+    "description": "Concurrent publish and edit conflict",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Open draft in Tab 1 for editing",
+      "Open same draft in Tab 2",
+      "Publish draft in Tab 2",
+      "Return to Tab 1 and attempt to save",
+      "Verify error handling (draft no longer exists)"
+    ]
+  },
+  {
+    "name": "Edit same draft in two tabs concurrently",
+    "description": "Last write wins for concurrent edits",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Open draft in Tab 1, modify title to 'Version A'",
+      "Open same draft in Tab 2, modify title to 'Version B'",
+      "Save in Tab 1",
+      "Save in Tab 2",
+      "Verify Tab 2 changes overwrite Tab 1 (last write wins)"
+    ]
+  },
+  {
+    "name": "Unauthorized user attempts to access drafts",
+    "description": "Guest user cannot access drafts feature",
+    "steps": [
+      "Do not authenticate",
+      "Attempt to navigate to Drafts page",
+      "Verify redirect to login or 401 error",
+      "Verify 'Drafts' link not visible in navigation"
+    ]
+  },
+  {
+    "name": "User attempts to view another user's draft via direct URL",
+    "description": "Drafts are private to author only",
+    "steps": [
+      "User A creates a draft with slug 'userA-draft'",
+      "Authenticate as User B",
+      "Attempt to access User A's draft via direct URL",
+      "Verify 403 Forbidden or 404 Not Found response"
+    ]
+  },
+  {
+    "name": "User attempts to edit another user's draft",
+    "description": "Authorization check prevents editing others' drafts",
+    "steps": [
+      "User A creates a draft",
+      "Authenticate as User B",
+      "Attempt to send API request to edit User A's draft",
+      "Verify 403 Forbidden response"
+    ]
+  },
+  {
+    "name": "User attempts to delete another user's draft",
+    "description": "Authorization prevents deleting others' drafts",
+    "steps": [
+      "User A creates a draft",
+      "Authenticate as User B",
+      "Attempt to send API request to delete User A's draft",
+      "Verify 403 Forbidden response"
+    ]
+  },
+  {
+    "name": "JWT token expires while editing draft",
+    "description": "Handle authentication expiry during editing",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Edit draft",
+      "Wait for token to expire",
+      "Attempt to save draft",
+      "Verify 401 Unauthorized response",
+      "Verify user is redirected to login"
+    ]
+  },
+  {
+    "name": "Publish draft after token expires",
+    "description": "Token expiry during publish operation",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Edit draft",
+      "Wait for token to expire",
+      "Attempt to publish",
+      "Verify 401 Unauthorized response"
+    ]
+  },
+  {
+    "name": "Draft does not appear in global feed",
+    "description": "Verify draft privacy - not visible in feeds",
+    "steps": [
+      "Authenticate as User A",
+      "Create and save draft",
+      "Authenticate as User B",
+      "Navigate to global feed",
+      "Verify User A's draft does not appear"
+    ]
+  },
+  {
+    "name": "Draft does not appear in Your Feed",
+    "description": "Drafts excluded from personalized feed",
+    "steps": [
+      "User A creates a draft",
+      "User B follows User A",
+      "Authenticate as User B",
+      "Navigate to Your Feed",
+      "Verify User A's draft does not appear"
+    ]
+  },
+  {
+    "name": "Draft does not appear on author's profile",
+    "description": "Drafts not visible on public profile pages",
+    "steps": [
+      "Authenticate as User A",
+      "Create and save draft",
+      "Visit User A's profile page (as User B)",
+      "Verify draft does not appear in 'My Articles' tab"
+    ]
+  },
+  {
+    "name": "Draft tags do not affect tag popularity",
+    "description": "Draft tags excluded from popular tags sidebar",
+    "steps": [
+      "Create 10 published articles with tag 'javascript'",
+      "Create 20 drafts with tag 'typescript'",
+      "Navigate to home page",
+      "Verify 'javascript' appears in popular tags",
+      "Verify 'typescript' does not appear (only in drafts)"
+    ]
+  },
+  {
+    "name": "Draft tags do not appear in tag filter",
+    "description": "Filtering by draft tag shows no results",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with unique tag 'draft-only-tag'",
+      "Click on 'draft-only-tag' in tag list (if visible)",
+      "Verify no articles appear (tag only used in draft)"
+    ]
+  },
+  {
+    "name": "Published article has correct slug after publish",
+    "description": "Slug generation follows article creation rules",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with title 'My Test Article'",
+      "Publish draft",
+      "Verify slug is 'my-test-article'",
+      "Verify article is accessible at URL with slug"
+    ]
+  },
+  {
+    "name": "Draft timestamps are maintained correctly",
+    "description": "Verify createdAt and updatedAt behavior",
+    "steps": [
+      "Authenticate as user",
+      "Create draft (note createdAt and updatedAt)",
+      "Wait 5 seconds",
+      "Edit and save draft",
+      "Verify createdAt is unchanged",
+      "Verify updatedAt is updated to recent time"
+    ]
+  },
+  {
+    "name": "Published article has correct timestamps",
+    "description": "Published article timestamps differ from draft timestamps",
+    "steps": [
+      "Authenticate as user",
+      "Create draft (note timestamps)",
+      "Wait 10 seconds",
+      "Publish draft",
+      "Verify published article has new createdAt timestamp",
+      "Verify article updatedAt matches createdAt initially"
+    ]
+  },
+  {
+    "name": "Draft to article transition is atomic",
+    "description": "Publish operation ensures data consistency",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with title, description, body, tags",
+      "Publish draft",
+      "Verify article has all data from draft",
+      "Verify draft no longer exists",
+      "Verify no duplicate or orphaned records"
+    ]
+  },
+  {
+    "name": "Database error during draft save",
+    "description": "Handle database failures gracefully",
+    "steps": [
+      "Authenticate as user",
+      "Create draft",
+      "Simulate database connection failure",
+      "Attempt to save",
+      "Verify error message is displayed",
+      "Verify no partial data is saved"
+    ]
+  },
+  {
+    "name": "Loading state shown during draft save",
+    "description": "UI feedback during async save operation",
+    "steps": [
+      "Authenticate as user",
+      "Create draft",
+      "Click 'Save as Draft'",
+      "Verify button shows 'Saving...' text",
+      "Verify button is disabled during save",
+      "Verify button returns to normal after completion"
+    ]
+  },
+  {
+    "name": "Loading state shown during publish",
+    "description": "UI feedback during async publish operation",
+    "steps": [
+      "Authenticate as user with existing draft",
+      "Edit draft",
+      "Click 'Publish'",
+      "Verify button shows 'Publishing...' text",
+      "Verify button is disabled during publish"
+    ]
+  },
+  {
+    "name": "Loading state shown while fetching drafts list",
+    "description": "UI indicates loading during initial page load",
+    "steps": [
+      "Authenticate as user with drafts",
+      "Navigate to Drafts page",
+      "Verify loading spinner or skeleton screen appears",
+      "Verify drafts appear after loading completes"
+    ]
+  },
+  {
+    "name": "Success message appears after saving draft",
+    "description": "User receives confirmation of successful save",
+    "steps": [
+      "Authenticate as user",
+      "Create draft and save",
+      "Verify success message: 'Draft saved successfully'",
+      "Verify message disappears after a few seconds"
+    ]
+  },
+  {
+    "name": "User remains on editor after saving draft",
+    "description": "Save does not navigate away from editor",
+    "steps": [
+      "Authenticate as user",
+      "Navigate to New Article page",
+      "Create and save draft",
+      "Verify user remains on editor page",
+      "Verify can continue editing or navigate away"
+    ]
+  },
+  {
+    "name": "Save draft with empty body field",
+    "description": "Test validation of required body field",
+    "steps": [
+      "Authenticate as user",
+      "Fill in title and description only",
+      "Attempt to save as draft",
+      "Verify validation behavior (should fail if body is required)"
+    ]
+  },
+  {
+    "name": "Save draft with whitespace-only fields",
+    "description": "Test handling of whitespace-only input",
+    "steps": [
+      "Authenticate as user",
+      "Enter whitespace-only title, description, body",
+      "Attempt to save as draft",
+      "Verify validation fails or whitespace is trimmed"
+    ]
+  },
+  {
+    "name": "Save draft with markdown formatting in body",
+    "description": "Verify markdown is preserved in draft",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with markdown: # Header, **bold**, [link](url)",
+      "Save as draft",
+      "Reload draft",
+      "Verify markdown syntax is preserved correctly"
+    ]
+  },
+  {
+    "name": "Publish draft with markdown renders correctly",
+    "description": "Markdown in draft body renders as HTML on publish",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with markdown formatting",
+      "Publish draft",
+      "View published article",
+      "Verify markdown is rendered as HTML correctly"
+    ]
+  },
+  {
+    "name": "Draft author information is tracked",
+    "description": "Draft is associated with correct author",
+    "steps": [
+      "Authenticate as User A",
+      "Create draft",
+      "Verify draft is associated with User A",
+      "Publish draft",
+      "Verify published article author is User A"
+    ]
+  },
+  {
+    "name": "Multiple users can have drafts with same title",
+    "description": "Draft titles are not globally unique",
+    "steps": [
+      "Authenticate as User A, create draft 'Test'",
+      "Authenticate as User B, create draft 'Test'",
+      "Verify both users have separate 'Test' drafts",
+      "Publish both drafts",
+      "Verify both articles exist with different slugs"
+    ]
+  },
+  {
+    "name": "API rate limiting during rapid draft saves",
+    "description": "Test system behavior with rapid repeated saves",
+    "steps": [
+      "Authenticate as user",
+      "Create draft",
+      "Rapidly click 'Save as Draft' 20 times in 1 second",
+      "Verify system handles gracefully (no crashes)",
+      "Verify appropriate rate limiting or throttling"
+    ]
+  },
+  {
+    "name": "Draft with HTML in title and description",
+    "description": "Test XSS prevention in draft fields",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with title: '<script>alert(\"xss\")</script>'",
+      "Save as draft",
+      "View drafts list",
+      "Verify HTML is escaped and not executed",
+      "Publish draft",
+      "Verify XSS is prevented on published article"
+    ]
+  },
+  {
+    "name": "Draft with SQL injection attempt in fields",
+    "description": "Test SQL injection prevention",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with title: \"'; DROP TABLE articles; --\"",
+      "Save as draft",
+      "Verify draft is saved safely",
+      "Verify no SQL injection occurs"
+    ]
+  },
+  {
+    "name": "Drafts page pagination with many drafts",
+    "description": "Test pagination behavior if implemented",
+    "steps": [
+      "Authenticate as user",
+      "Create 100 drafts",
+      "Navigate to Drafts page",
+      "Verify pagination works correctly (if applicable)",
+      "Verify all drafts are accessible"
+    ]
+  },
+  {
+    "name": "Save draft with emoji in title and description",
+    "description": "Test Unicode support in draft fields",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with title: '🚀 My Article 🎉'",
+      "Save as draft",
+      "Reload draft",
+      "Verify emoji are preserved",
+      "Publish draft",
+      "Verify slug handles emoji correctly"
+    ]
+  },
+  {
+    "name": "Draft with multi-language characters",
+    "description": "Test internationalization support",
+    "steps": [
+      "Authenticate as user",
+      "Create draft with title in Chinese: '我的文章'",
+      "Save as draft",
+      "Verify draft is saved correctly",
+      "Publish draft",
+      "Verify slug generation handles non-ASCII characters"
+    ]
+  }
+]

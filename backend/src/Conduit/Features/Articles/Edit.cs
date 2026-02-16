@@ -65,7 +65,12 @@ public class Edit
             // list of currently saved article tags for the given article
             var articleTagList = message.Model.Article.TagList ?? Enumerable.Empty<string>();
 
-            var articleTagsToCreate = GetArticleTagsToCreate(article, articleTagList);
+            // Load existing tags from database to avoid foreign key constraint errors
+            var existingTags = await context.Tags
+                .Where(t => articleTagList.Contains(t.TagId))
+                .ToDictionaryAsync(t => t.TagId!, t => t, cancellationToken);
+
+            var articleTagsToCreate = GetArticleTagsToCreate(article, articleTagList, existingTags);
             var articleTagsToDelete = GetArticleTagsToDelete(article, articleTagList);
 
             if (
@@ -77,11 +82,6 @@ public class Edit
             {
                 article.UpdatedAt = DateTime.UtcNow;
             }
-
-            // ensure context is tracking any tags that are about to be created so that it won't attempt to insert a duplicate
-            context.Tags.AttachRange(
-                [.. articleTagsToCreate.Where(x => x.Tag is not null).Select(a => a.Tag!)]
-            );
 
             // add the new article tags
             await context.ArticleTags.AddRangeAsync(articleTagsToCreate, cancellationToken);
@@ -111,7 +111,8 @@ public class Edit
         /// </summary>
         private static List<ArticleTag> GetArticleTagsToCreate(
             Article article,
-            IEnumerable<string> articleTagList
+            IEnumerable<string> articleTagList,
+            Dictionary<string, Tag> existingTags
         )
         {
             var articleTagsToCreate = new List<ArticleTag>();
@@ -120,11 +121,16 @@ public class Edit
                 var at = article.ArticleTags?.FirstOrDefault(t => t.TagId == tag);
                 if (at == null)
                 {
+                    // Use existing tag if it's already in the database, otherwise create new
+                    var tagEntity = existingTags.TryGetValue(tag, out var existingTag) 
+                        ? existingTag 
+                        : new Tag { TagId = tag };
+
                     at = new ArticleTag
                     {
                         Article = article,
                         ArticleId = article.ArticleId,
-                        Tag = new Tag { TagId = tag },
+                        Tag = tagEntity,
                         TagId = tag,
                     };
                     articleTagsToCreate.Add(at);

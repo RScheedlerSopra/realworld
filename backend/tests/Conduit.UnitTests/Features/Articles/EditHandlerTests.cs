@@ -288,4 +288,69 @@ public class EditHandlerTests : HandlerTestBase
         result.Should().NotBeNull();
         result.Article!.Slug.Should().Be("new-amazing-title");
     }
+
+    [Fact]
+    public async Task Handle_ShouldHandleMultipleEditsWithTags_WithoutForeignKeyError()
+    {
+        // Arrange
+        var author = new Person
+        {
+            Username = "testuser",
+            Email = "test@example.com"
+        };
+        Context.Persons.Add(author);
+
+        var article = new Article
+        {
+            Title = "Test Article",
+            Slug = "test-article",
+            Description = "Test Description",
+            Body = "Test Body",
+            Author = author,
+            IsDraft = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        Context.Articles.Add(article);
+        await Context.SaveChangesAsync();
+
+        _currentUserAccessor.Setup(x => x.GetCurrentUsername()).Returns("testuser");
+
+        // First edit - add tags
+        var model1 = new Edit.Model(
+            new Edit.ArticleData(
+                Title: "Updated Title 1",
+                Description: "Updated Description 1",
+                Body: "Updated Body 1",
+                TagList: ["tag1", "tag2"]
+            )
+        );
+        var command1 = new Edit.Command(model1, "test-article");
+        await _handler.Handle(command1, CancellationToken.None);
+
+        // Second edit - change all fields and add another tag
+        var model2 = new Edit.Model(
+            new Edit.ArticleData(
+                Title: "Updated Title 2",
+                Description: "Updated Description 2",
+                Body: "Updated Body 2",
+                TagList: ["tag1", "tag2", "tag3"]
+            )
+        );
+        var command2 = new Edit.Command(model2, "updated-title-1");
+
+        // Act
+        var result = await _handler.Handle(command2, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Article.Should().NotBeNull();
+        result.Article!.Title.Should().Be("Updated Title 2");
+        result.Article.Description.Should().Be("Updated Description 2");
+        result.Article.Body.Should().Be("Updated Body 2");
+        result.Article.TagList.Should().HaveCount(3);
+        result.Article.TagList.Should().Contain("tag1");
+        result.Article.TagList.Should().Contain("tag2");
+        result.Article.TagList.Should().Contain("tag3");
+    }
 }

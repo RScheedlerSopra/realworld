@@ -23,7 +23,7 @@
             <div class="article-preview">
               <div class="article-meta">
                 <a [routerLink]="['/@' + draft.author.username]">
-                  <img [src]="draft.author.image" alt="Author image" />
+                  <img [src]="draft.author.image || '/assets/pf.png'" alt="Author image" />
                 </a>
                 <div class="info">
                   <a [routerLink]="['/@' + draft.author.username]" class="author">

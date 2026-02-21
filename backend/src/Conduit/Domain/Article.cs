@@ -39,6 +39,8 @@ public class Article
     [JsonIgnore]
     public List<ArticleFavorite> ArticleFavorites { get; init; } = new();
 
+    public int ReadCount { get; set; }
+
     public DateTime CreatedAt { get; init; }
 
     public DateTime UpdatedAt { get; set; }

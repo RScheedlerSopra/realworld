@@ -12,6 +12,7 @@
     <div class="banner">
       <div class="container">
         <h1>{{ a.title }}</h1>
+        <p class="reading-time">{{ readingTime() }} min read &middot; <i class="ion-eye"></i> {{ a.readCount }} {{ a.readCount === 1 ? 'read' : 'reads' }}</p>
 
         <app-article-meta [article]="a">
           @if (canModify()) {

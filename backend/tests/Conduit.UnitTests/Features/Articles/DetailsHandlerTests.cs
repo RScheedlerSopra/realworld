@@ -198,4 +198,79 @@ public class DetailsHandlerTests : HandlerTestBase
         result.Article.Should().NotBeNull();
         result.Article!.FavoritesCount.Should().Be(2);
     }
+
+    [Fact]
+    public async Task Handle_ShouldIncrementReadCount_WhenArticleIsRead()
+    {
+        // Arrange
+        var author = new Person
+        {
+            Username = "testuser",
+            Email = "test@example.com"
+        };
+
+        var article = new Article
+        {
+            Title = "Test Article",
+            Slug = "test-article",
+            Description = "Test Description",
+            Body = "Test Body",
+            Author = author,
+            ReadCount = 5,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        Context.Persons.Add(author);
+        Context.Articles.Add(article);
+        await Context.SaveChangesAsync();
+
+        var query = new Details.Query(Slug: "test-article");
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Article!.ReadCount.Should().Be(6);
+        var stored = await Context.Articles.FindAsync(article.ArticleId);
+        stored!.ReadCount.Should().Be(6);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldIncrementReadCount_OnEachRead()
+    {
+        // Arrange
+        var author = new Person
+        {
+            Username = "testuser",
+            Email = "test@example.com"
+        };
+
+        var article = new Article
+        {
+            Title = "Test Article",
+            Slug = "test-article",
+            Description = "Test Description",
+            Body = "Test Body",
+            Author = author,
+            ReadCount = 0,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        Context.Persons.Add(author);
+        Context.Articles.Add(article);
+        await Context.SaveChangesAsync();
+
+        var query = new Details.Query(Slug: "test-article");
+
+        // Act
+        await _handler.Handle(query, CancellationToken.None);
+        await _handler.Handle(query, CancellationToken.None);
+        await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        var stored = await Context.Articles.FindAsync(article.ArticleId);
+        stored!.ReadCount.Should().Be(3);
+    }
 }

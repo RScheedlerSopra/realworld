@@ -3,6 +3,7 @@ using System;
 using Conduit.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Conduit.Migrations
 {
     [DbContext(typeof(ConduitContext))]
-    partial class ConduitContextModelSnapshot : ModelSnapshot
+    [Migration("20260221132300_AddReadCountToArticle")]
+    partial class AddReadCountToArticle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -34,9 +37,6 @@ namespace Conduit.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("ReadCount")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Slug")
                         .HasColumnType("TEXT");

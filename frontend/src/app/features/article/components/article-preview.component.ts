@@ -26,6 +26,9 @@ import { FavoriteButtonComponent } from './favorite-button.component';
             </li>
           }
         </ul>
+        <span class="read-count">
+          <i class="ion-eye"></i> {{ article().readCount }} {{ article().readCount === 1 ? 'read' : 'reads' }}
+        </span>
       </a>
     </div>
   `,

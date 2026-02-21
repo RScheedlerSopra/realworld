@@ -27,6 +27,7 @@ public class Details
         {
             var article = await context
                 .Articles.GetAllData()
+                .AsTracking()
                 .FirstOrDefaultAsync(x => x.Slug == message.Slug, cancellationToken);
 
             if (article == null)
@@ -36,6 +37,10 @@ public class Details
                     new { Article = Constants.NOT_FOUND }
                 );
             }
+
+            article.ReadCount++;
+            await context.SaveChangesAsync(cancellationToken);
+
             return new ArticleEnvelope(article);
         }
     }

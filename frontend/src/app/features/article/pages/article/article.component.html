@@ -12,6 +12,7 @@
     <div class="banner">
       <div class="container">
         <h1>{{ a.title }}</h1>
+        <p class="reading-time">{{ readingTime() }} min read</p>
 
         <app-article-meta [article]="a">
           @if (canModify()) {

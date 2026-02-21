@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { User } from '../../../../core/auth/user.model';
@@ -24,6 +24,14 @@ import { FollowButtonComponent } from '../../../profile/components/follow-button
 @Component({
   selector: 'app-article-page',
   templateUrl: './article.component.html',
+  styles: `
+    .reading-time {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.875rem;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+    }
+  `,
   imports: [
     ArticleMetaComponent,
     RouterLink,
@@ -42,6 +50,11 @@ import { FollowButtonComponent } from '../../../profile/components/follow-button
 })
 export default class ArticleComponent implements OnInit {
   article = signal<Article | null>(null);
+  readingTime = computed(() => {
+    const body = this.article()?.body ?? '';
+    const wordCount = body.trim().split(/\s+/).filter(w => w.length > 0).length;
+    return Math.max(1, Math.ceil(wordCount / 200));
+  });
   currentUser = signal<User | null>(null);
   comments = signal<Comment[]>([]);
   canModify = signal(false);

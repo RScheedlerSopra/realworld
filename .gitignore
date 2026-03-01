@@ -303,3 +303,7 @@ tools
 *.db-shm
 *.db-wal
 *.db
+
+# kittify (spec-kitty)
+.kittify/.dashboard
+.kittify/missions/__pycache__/

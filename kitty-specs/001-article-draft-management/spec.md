@@ -5,6 +5,16 @@
 **Status**: Draft  
 **Input**: User description: "I want to be able to draft articles instead of publishing them directly"
 
+## Clarifications
+
+### Session 2026-03-01
+
+- Q: When should article slugs be generated for drafts? → A: Generate slug immediately when draft is first saved
+- Q: When an author edits a draft and changes the title, should the slug be updated to match the new title? → A: Keep original slug unchanged
+- Q: How many drafts should be displayed per page? → A: No pagination needed
+- Q: When an unauthorized user attempts to view a draft via direct URL, what type of error should the system return? → A: 404 Not Found (hides existence of draft)
+- Q: What URL pattern should be used for draft articles? → A: `/editor/:slug` for all articles with draft/published status handled internally
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Create and Save Draft Article (Priority: P1)
@@ -85,16 +95,16 @@ Drafts must remain completely private to the author. Other users (including foll
 1. **Given** an author has draft articles, **When** another user visits the author's profile page, **Then** the drafts are not visible (only published articles appear)
 2. **Given** an author has draft articles, **When** a guest or other user views the global feed, **Then** draft articles never appear
 3. **Given** an author has draft articles, **When** followers view their personal feed, **Then** draft articles are not included
-4. **Given** an author has created a draft, **When** another user attempts to access the draft via direct URL, **Then** they receive an error (not found or unauthorized)
+4. **Given** an author has created a draft, **When** another user (guest or authenticated) attempts to access the draft via direct URL, **Then** they receive a 404 Not Found error (hiding the draft's existence)
 
 ---
 
 ### Edge Cases
 
-- What happens when an author attempts to create a draft with a title identical to one of their existing drafts? (System should allow duplicates since drafts are private and work-in-progress)
+- What happens when an author attempts to create a draft with a title identical to one of their existing drafts? (System should allow duplicates since drafts are private and work-in-progress; slug conflict is resolved by appending a unique identifier)
 - What happens when an author deletes a draft? (Draft is permanently removed with cascade deletion of associated data like tags)
-- What happens if an author creates a draft with a slug that matches a published article? (Slug generation should handle conflicts - perhaps by appending unique identifier or timestamp)
-- What happens when an author has many drafts (e.g., 100+)? (Drafts page should support pagination similar to article lists)
+- What happens if an author creates a draft with a slug that matches an existing published article or another draft? (System appends a unique identifier to the slug to ensure uniqueness)
+- What happens when an author has many drafts (e.g., 100+)? (All drafts are displayed in a single list without pagination, ordered by most recently updated first)
 - What happens when an author tries to favorite or comment on their own draft? (Not possible - drafts don't have social features until published)
 - What happens when an author is editing a draft and their session expires? (Standard authentication behavior - redirect to login, preserve draft content)
 
@@ -105,14 +115,18 @@ Drafts must remain completely private to the author. Other users (including foll
 - **FR-001**: System MUST allow authenticated authors to create new articles and save them as drafts without publishing
 - **FR-002**: System MUST provide a "Save as draft" button on the article creation and edit pages
 - **FR-003**: System MUST provide a dedicated "Drafts" page accessible only to authenticated authors showing their own drafts
+- **FR-003a**: Drafts page MUST display all author's drafts in a single list without pagination, ordered by most recently updated first
 - **FR-004**: Drafts MUST be completely private - visible only to the author who created them
+- **FR-004a**: System MUST return 404 Not Found error when unauthorized users (guests or other authenticated users) attempt to access draft articles via direct URL, protecting draft privacy by hiding their existence
 - **FR-005**: System MUST allow authors to edit their draft articles and save changes without publishing
 - **FR-006**: System MUST provide a "Publish" button when editing drafts that converts them to normal published articles
 - **FR-007**: Published articles MUST NOT be convertible back to draft status (one-way transition)
 - **FR-008**: Draft articles MUST NOT appear in global feeds, personal feeds, profile pages, tag lists, or any public article discovery mechanism
 - **FR-009**: System MUST validate required article fields (title, description, body) before saving drafts (same validation as published articles)
 - **FR-010**: System MUST support tags for draft articles (tags are saved with the draft)
-- **FR-011**: System MUST generate unique slugs for draft articles (or defer slug generation until publish time)
+- **FR-011**: System MUST generate unique slugs immediately when draft articles are first saved, using the same slug generation logic as published articles with conflict resolution (appending unique identifier if slug already exists)
+- **FR-011a**: System MUST keep the original slug unchanged when authors edit draft titles (slug stability ensures consistent URLs throughout the draft lifecycle)
+- **FR-011b**: System MUST use the URL pattern `/editor/:slug` for editing both draft and published articles, determining article status internally rather than using separate URL paths
 - **FR-012**: Draft articles MUST NOT support comments, favorites, or any social interactions until published
 - **FR-013**: System MUST display drafts with metadata including creation and last-updated timestamps
 - **FR-014**: When a draft is published, it MUST be removed from the Drafts page and appear in all standard public locations (feeds, profile, tag lists)

@@ -1,0 +1,10 @@
+{
+  "feature_number": "001",
+  "slug": "001-article-draft-management",
+  "friendly_name": "Article Draft Management",
+  "mission": "software-dev",
+  "source_description": "I want to be able to draft articles instead of publishing them directly",
+  "created_at": "2026-03-01T00:00:00Z",
+  "target_branch": "master",
+  "vcs": "git"
+}

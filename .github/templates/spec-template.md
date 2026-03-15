@@ -1,6 +1,9 @@
 <!--
 Feature specs live at: .github/specs/<kebab-case-name>/spec.md
 Write in brief sentences. Prefer specific, testable wording.
+
+RULES:
+- Never include technical implementation details (e.g. "calls API X", "database table Y"). Instead, describe what the user does and what they see, and how the system responds in observable terms.
 -->
 
 # Feature: <feature-name>

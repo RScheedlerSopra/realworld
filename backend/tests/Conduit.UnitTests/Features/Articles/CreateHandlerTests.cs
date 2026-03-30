@@ -53,7 +53,7 @@ public class CreateHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.Title.Should().Be("Test Article");
+        result.Article.Title.Should().Be("Test Article");
         result.Article.Description.Should().Be("Test Description");
         result.Article.Body.Should().Be("Test Body");
         result.Article.Slug.Should().Be("test-article");
@@ -96,7 +96,7 @@ public class CreateHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.TagList.Should().BeEmpty();
+        result.Article.TagList.Should().BeEmpty();
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class CreateHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.TagList.Should().HaveCount(2);
+        result.Article.TagList.Should().HaveCount(2);
 
         // Verify only one "existing" tag exists in database
         var tagsInDb = Context.Tags.Where(t => t.TagId == "existing").ToList();
@@ -168,6 +168,6 @@ public class CreateHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.Slug.Should().Be("this-is-a-test-article-title");
+        result.Article.Slug.Should().Be("this-is-a-test-article-title");
     }
 }

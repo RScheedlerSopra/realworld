@@ -41,7 +41,7 @@ public class DetailsHandlerTests
         // Assert
         result.Should().NotBeNull();
         result.Profile.Should().NotBeNull();
-        result.Profile!.Username.Should().Be("testuser");
+        result.Profile.Username.Should().Be("testuser");
         result.Profile.Bio.Should().Be("Test bio");
         result.Profile.Image.Should().Be("http://example.com/image.jpg");
         result.Profile.IsFollowed.Should().BeFalse();

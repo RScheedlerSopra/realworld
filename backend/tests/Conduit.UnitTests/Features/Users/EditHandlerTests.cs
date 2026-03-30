@@ -73,7 +73,7 @@ public class EditHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.User.Should().NotBeNull();
-        result.User!.Username.Should().Be("newusername");
+        result.User.Username.Should().Be("newusername");
         result.User.Email.Should().Be("newemail@example.com");
         result.User.Bio.Should().Be("New bio");
         result.User.Image.Should().Be("http://example.com/new.jpg");

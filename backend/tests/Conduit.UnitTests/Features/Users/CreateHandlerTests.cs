@@ -61,7 +61,7 @@ public class CreateHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.User.Should().NotBeNull();
-        result.User!.Username.Should().Be("testuser");
+        result.User.Username.Should().Be("testuser");
         result.User.Email.Should().Be("test@example.com");
         result.User.Token.Should().Be("test-token");
 

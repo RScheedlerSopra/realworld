@@ -62,7 +62,7 @@ public class DetailsHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.User.Should().NotBeNull();
-        result.User!.Username.Should().Be("testuser");
+        result.User.Username.Should().Be("testuser");
         result.User.Email.Should().Be("test@example.com");
         result.User.Bio.Should().Be("Test bio");
         result.User.Image.Should().Be("http://example.com/image.jpg");

@@ -110,7 +110,7 @@ public class EditHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.Title.Should().Be("Original Title");
+        result.Article.Title.Should().Be("Original Title");
         result.Article.Description.Should().Be("Updated Description");
         result.Article.Body.Should().Be("Original Body");
     }
@@ -155,7 +155,7 @@ public class EditHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.TagList.Should().HaveCount(2);
+        result.Article.TagList.Should().HaveCount(2);
         result.Article.TagList.Should().Contain("tag1");
         result.Article.TagList.Should().Contain("tag2");
     }
@@ -216,7 +216,7 @@ public class EditHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.TagList.Should().HaveCount(1);
+        result.Article.TagList.Should().HaveCount(1);
         result.Article.TagList.Should().Contain("tag1");
         result.Article.TagList.Should().NotContain("tag2");
     }
@@ -282,6 +282,6 @@ public class EditHandlerTests : HandlerTestBase
 
         // Assert
         result.Should().NotBeNull();
-        result.Article!.Slug.Should().Be("new-amazing-title");
+        result.Article.Slug.Should().Be("new-amazing-title");
     }
 }

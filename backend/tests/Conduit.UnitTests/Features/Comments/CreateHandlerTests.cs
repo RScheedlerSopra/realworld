@@ -131,7 +131,7 @@ public class CreateHandlerTests : HandlerTestBase
         var afterTime = DateTime.UtcNow;
 
         // Assert
-        result.Comment!.CreatedAt.Should().BeOnOrAfter(beforeTime);
+        result.Comment.CreatedAt.Should().BeOnOrAfter(beforeTime);
         result.Comment.CreatedAt.Should().BeOnOrBefore(afterTime);
         result.Comment.UpdatedAt.Should().BeOnOrAfter(beforeTime);
         result.Comment.UpdatedAt.Should().BeOnOrBefore(afterTime);

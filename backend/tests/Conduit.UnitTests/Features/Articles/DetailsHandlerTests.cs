@@ -129,7 +129,7 @@ public class DetailsHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.TagList.Should().HaveCount(2);
+        result.Article.TagList.Should().HaveCount(2);
         result.Article.TagList.Should().Contain("tag1");
         result.Article.TagList.Should().Contain("tag2");
     }
@@ -196,6 +196,6 @@ public class DetailsHandlerTests : HandlerTestBase
         // Assert
         result.Should().NotBeNull();
         result.Article.Should().NotBeNull();
-        result.Article!.FavoritesCount.Should().Be(2);
+        result.Article.FavoritesCount.Should().Be(2);
     }
 }

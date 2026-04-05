@@ -1,6 +1,6 @@
 ---
-name: release-notes
-description: Writes release notes for the Conduit project.
+name: johnny
+description: Johnny
 ---
 
 ## Role

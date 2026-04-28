@@ -117,3 +117,8 @@ Conduit is a social blogging platform where authenticated users create markdown 
 - Frontend source: `frontend/src/`
 - Unit tests: `backend/tests/Conduit.UnitTests/`
 - Integration tests: `backend/tests/Conduit.IntegrationTests/`
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->

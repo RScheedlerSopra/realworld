@@ -1,0 +1,28 @@
+{
+  "projectName": "Realworld",
+  "projectType": "brownfield",
+  "sdlcPhases": [
+    "testing",
+    "solutioning",
+    "implementation"
+  ],
+  "sdlcDepth": "lightweight",
+  "technicalStack": {
+    "frontend": [
+      "angular"
+    ],
+    "backend": [
+      "dotnet"
+    ]
+  },
+  "cloudProviders": [
+    "none"
+  ],
+  "integrations": [
+    "other"
+  ],
+  "needsSecurityAuditing": false,
+  "needsBrandCompliance": false,
+  "needsDocumentGeneration": false,
+  "needsAccessibility": false
+}

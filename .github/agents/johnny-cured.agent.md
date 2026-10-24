@@ -1,8 +1,8 @@
 ---
 name: johnny-cured
 description: Johnny, but cured
-model: Claude Sonnet 4.5 (copilot)
-tools: [vscode/runCommand, execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/createAndRunTask, execute/runInTerminal, read, agent, com.atlassian/atlassian-mcp-server/getJiraIssue, com.atlassian/atlassian-mcp-server/searchJiraIssuesUsingJql, todo]
+model: Claude Sonnet 5.5 (copilot)
+tools: [execute/runTask, execute/killTerminal, execute/createAndRunTask, execute/runInTerminal, read, agent, com.atlassian/atlassian-mcp-server/getJiraIssue, com.atlassian/atlassian-mcp-server/searchJiraIssuesUsingJql, todo]
 ---
 
 ## Role
